@@ -1,4 +1,4 @@
-import io.cordacademy.test.IntegrationTest
+import com.ccc.test.IntegrationTest
 
 class NodeDriver : IntegrationTest(
     // TODO : Add cordapp packages here; for example...

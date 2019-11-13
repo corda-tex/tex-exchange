@@ -1,4 +1,4 @@
-rootProject.name = 'cordacademy-template'
-include 'cordacademy-webserver'
-include 'cordacademy-test'
+rootProject.name = 'tex-exchange'
+include 'tex-exchange-webserver'
+include 'tex-exchange-test'
 
