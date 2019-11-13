@@ -1,4 +1,4 @@
-package com.example.state
+package com.ccc.state
 
 import net.corda.core.contracts.*
 import net.corda.core.flows.FlowLogicRefFactory

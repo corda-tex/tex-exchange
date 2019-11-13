@@ -1,4 +1,4 @@
-package io.cordacademy.test
+package com.ccc.test
 
 import net.corda.core.contracts.*
 import net.corda.core.identity.AbstractParty

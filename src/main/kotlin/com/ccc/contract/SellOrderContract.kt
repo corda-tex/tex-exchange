@@ -1,4 +1,4 @@
-package com.example.contract
+package com.ccc.contract
 
 
 import net.corda.core.contracts.*

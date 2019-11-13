@@ -1,4 +1,4 @@
-package io.cordacademy.test
+package com.ccc.test
 
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.loggerFor

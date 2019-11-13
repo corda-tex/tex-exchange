@@ -1,6 +1,6 @@
-package com.example.state
+package com.ccc.state
 
-import com.example.schema.OrderSchemaV1
+import com.ccc.schema.OrderSchemaV1
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty

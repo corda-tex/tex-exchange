@@ -1,12 +1,12 @@
-package io.cordacademy.webserver
+package com.ccc.webserver
 
 import com.fasterxml.jackson.core.util.DefaultIndenter
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.cordacademy.webserver.areas.admin.adminRoutes
-import io.cordacademy.webserver.areas.attachments.attachmentRoutes
-import io.cordacademy.webserver.areas.nodes.nodeRoutes
+import com.ccc.webserver.areas.admin.adminRoutes
+import com.ccc.webserver.areas.attachments.attachmentRoutes
+import com.ccc.webserver.areas.nodes.nodeRoutes
 import io.ktor.application.install
 import io.ktor.features.CallLogging
 import io.ktor.features.Compression

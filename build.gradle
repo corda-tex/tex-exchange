@@ -75,7 +75,7 @@ dependencies {
     cordaRuntime "$log4j_group:log4j-slf4j-impl:$log4j_version"
 
     // Test Dependencies
-    testImplementation project(":cordacademy-test")
+    testImplementation project(":tex-exchange-test")
 }
 
 jar { exclude '**/log4j2*.xml' }

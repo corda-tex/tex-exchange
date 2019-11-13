@@ -1,6 +1,6 @@
-package com.example.state
+package com.ccc.state
 
-import com.example.contract.StockContract
+import com.ccc.contract.StockContract
 import net.corda.core.contracts.*
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party

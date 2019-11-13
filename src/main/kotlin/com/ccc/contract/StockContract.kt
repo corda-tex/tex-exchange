@@ -1,14 +1,13 @@
-package com.example.contract
+package com.ccc.contract
 
 import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
-import java.security.PublicKey
 
 class StockContract : Contract {
 
     companion object {
         @JvmStatic
-        val CONTRACT_REF = "com.example.contract.StockContract"
+        val CONTRACT_REF = "com.ccc.contract.StockContract"
     }
 
     interface Commands : CommandData

@@ -1,4 +1,4 @@
-package io.cordacademy.test
+package com.ccc.test
 
 import net.corda.core.contracts.ContractClassName
 import net.corda.testing.core.TestIdentity

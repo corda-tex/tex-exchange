@@ -1,4 +1,4 @@
-package io.cordacademy.test
+package com.ccc.test
 
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.flows.FlowLogic
