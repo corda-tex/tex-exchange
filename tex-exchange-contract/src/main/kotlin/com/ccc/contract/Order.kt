@@ -1,12 +1,11 @@
-package com.ccc.state
+package com.ccc.contract
 
-import net.corda.core.contracts.*
-import net.corda.core.flows.FlowLogicRefFactory
+import net.corda.core.contracts.BelongsToContract
+import net.corda.core.contracts.LinearState
+import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
-import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import java.time.Instant
-import java.time.LocalDateTime
 
 @CordaSerializable
 enum class OrderStatus { OPEN, BID_ACCEPTED, SETTLED}
@@ -14,6 +13,7 @@ enum class OrderStatus { OPEN, BID_ACCEPTED, SETTLED}
 @CordaSerializable
 enum class Direction { BUY, SELL }
 
+@BelongsToContract(OrderContract::class)
 data class Order(
     val orderId: String,
     val stockId: String,
