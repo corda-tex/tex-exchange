@@ -14,8 +14,8 @@ dependencies {
     implementation "$kotlin_group:kotlin-stdlib-jdk8:$ktor_kotlin_version"
 
     // Corda Development Dependencies
-    implementation "$corda_group:corda-core:$corda_release_version"
-    implementation "$corda_group:corda-rpc:$corda_release_version"
+    implementation "$corda_release_group:corda-core:$corda_release_version"
+    implementation "$corda_release_group:corda-rpc:$corda_release_version"
 
     // CorDapp Dependencies
     // TODO : Add cordapp packages to your dependency configuration; for example...

@@ -14,9 +14,9 @@ dependencies {
     implementation "$kotlin_group:kotlin-stdlib-jdk8:$kotlin_version"
 
     // Corda Test Dependencies
-    implementation "$corda_group:corda-core:$corda_release_version"
-    implementation "$corda_group:corda-node-driver:$corda_release_version"
-    
+    implementation "$corda_release_group:corda-core:$corda_release_version"
+    implementation "$corda_release_group:corda-node-driver:$corda_release_version"
+
     // Test Dependencies
     implementation "$junit_group:junit-jupiter-engine:$junit_version"
     implementation "$junit_group:junit-jupiter-api:$junit_version"
