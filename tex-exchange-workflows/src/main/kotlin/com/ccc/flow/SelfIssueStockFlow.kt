@@ -1,5 +1,6 @@
 package com.ccc.flow
 
+import co.paralleluniverse.fibers.Suspendable
 import com.ccc.contract.StockContract
 import com.ccc.contract.StockContract.Companion.STOCK_CONTRACT_REF
 import com.ccc.state.Stock
@@ -22,6 +23,7 @@ import net.corda.core.utilities.ProgressTracker
 class SelfIssueStockFlow(val description: String) : FlowLogic<UniqueIdentifier>() {
     override val progressTracker = ProgressTracker()
 
+    @Suspendable
     override fun call(): UniqueIdentifier {
         //Create a Stock State with the invoker's identity
         val stock = Stock(description = description, owner = ourIdentity)

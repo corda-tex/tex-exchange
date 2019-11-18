@@ -1,4 +1,4 @@
-package com.template
+package com.ccc
 
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.utilities.getOrThrow
@@ -12,21 +12,21 @@ import java.util.concurrent.Future
 import kotlin.test.assertEquals
 
 class DriverBasedTest {
-    private val bankA = TestIdentity(CordaX500Name("BankA", "", "GB"))
-    private val bankB = TestIdentity(CordaX500Name("BankB", "", "US"))
+    private val sellerBroker = TestIdentity(CordaX500Name("BrokerA", "", "GB"))
+    private val buyerBroker = TestIdentity(CordaX500Name("BrokerB", "", "US"))
 
     @Test
     fun `node test`() = withDriver {
         // Start a pair of nodes and wait for them both to be ready.
-        val (partyAHandle, partyBHandle) = startNodes(bankA, bankB)
+        val (partyAHandle, partyBHandle) = startNodes(sellerBroker, buyerBroker)
 
         // From each node, make an RPC call to retrieve another node's name from the network map, to verify that the
         // nodes have started and can communicate.
 
         // This is a very basic test: in practice tests would be starting flows, and verifying the states in the vault
         // and other important metrics to ensure that your CorDapp is working as intended.
-        assertEquals(bankB.name, partyAHandle.resolveName(bankB.name))
-        assertEquals(bankA.name, partyBHandle.resolveName(bankA.name))
+        assertEquals(buyerBroker.name, partyAHandle.resolveName(buyerBroker.name))
+        assertEquals(sellerBroker.name, partyBHandle.resolveName(sellerBroker.name))
     }
 
     // Runs a test inside the Driver DSL, which provides useful functions for starting nodes, etc.
