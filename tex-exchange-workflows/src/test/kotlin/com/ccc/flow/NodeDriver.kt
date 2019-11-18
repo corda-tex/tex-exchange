@@ -1,4 +1,4 @@
-package com.template
+package com.ccc.flow
 
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.utilities.getOrThrow
@@ -14,7 +14,7 @@ fun main(args: Array<String>) {
     val rpcUsers = listOf(User("user1", "test", permissions = setOf("ALL")))
 
     driver(DriverParameters(startNodesInProcess = true, waitForAllNodesToFinish = true)) {
-        startNode(providedName = CordaX500Name("PartyA", "London", "GB"), rpcUsers = rpcUsers).getOrThrow()
-        startNode(providedName = CordaX500Name("PartyB", "New York", "US"), rpcUsers = rpcUsers).getOrThrow()
+        startNode(providedName = CordaX500Name("Buyer", "London", "GB"), rpcUsers = rpcUsers).getOrThrow()
+        startNode(providedName = CordaX500Name("Seller", "New York", "US"), rpcUsers = rpcUsers).getOrThrow()
     }
 }
