@@ -52,7 +52,7 @@ class OrderContract : Contract {
             override fun verifyCommand(tx: LedgerTransaction, signers: Set<PublicKey>) {
                 val timeWindow: TimeWindow? = tx.timeWindow
                 requireThat {
-                    val time = timeWindow?.fromTime ?: throw IllegalArgumentException("Orders buys must be timestamped")
+                    val time = timeWindow?.fromTime ?: throw IllegalArgumentException("Sell Order must be timestamped")
                     "A Buy transaction should only have one input state" using (1 == tx.inputStates.size)
                     "A Buy transaction should only have one output state" using (1 == tx.outputStates.size)
                     "The input state must be an Order" using (tx.inputStates.single() is Order)
