@@ -90,7 +90,7 @@ class OrderContract : Contract {
                     val stockCommand = tx.commandsOfType(StockContract.Commands::class.java).single()
                     "Stock must be delisted" using (stockCommand.value is StockContract.Commands.Delist)
                     if (inputOrder.buyer != null) {
-                        "Both seller and buyer only must sign the Order end transaction" using
+                        "Both seller and buyer only must sign the Order to end transaction" using
                                 (signers == listOf(inputOrder.seller.owningKey, inputOrder.buyer.owningKey).toSet())
                     } else {
                         "Only the seller must sign the order end transaction" using (signers == setOf(inputOrder.seller.owningKey))
