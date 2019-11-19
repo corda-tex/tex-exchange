@@ -25,6 +25,13 @@ data class Stock
     override val participants: List<AbstractParty> get() = listOf(owner)
 
     /**
+     * Returns a copy of this Stock which is listed.
+     */
+    fun list(): Stock {
+        return copy(listed = true)
+    }
+
+    /**
      * Returns a copy of this Stock which has a new owner and is not listed.
      */
     fun transfer(newOwner: Party): Stock {
@@ -38,10 +45,5 @@ data class Stock
         return copy(listed = false)
     }
 
-    /**
-     * Returns a copy of this Stock which is listed.
-     */
-    fun list(): Stock {
-        return copy(listed = true)
-    }
+
 }
