@@ -1,5 +1,6 @@
 rootProject.name = 'tex-exchange'
-include 'tex-exchange-webserver'
+//include 'tex-exchange-webserver'
 include 'tex-exchange-test'
 include 'tex-exchange-contract'
+include 'tex-exchange-workflows'
 

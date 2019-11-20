@@ -1,108 +1,124 @@
 buildscript {
     ext {
+        corda_release_group = 'net.corda'
+        corda_release_version = '4.3-RC01'
+        tokens_release_group = 'com.r3.corda.lib.tokens'
+        tokens_release_version = '1.0'
+        accounts_release_group = 'com.r3.corda.lib.accounts'
+        accounts_release_version = '1.0-RC03'
+        corda_gradle_plugins_version = '4.0.42'
+        kotlin_version = '1.2.71'
+        junit_version = '4.12'
+        quasar_version = '0.7.10'
+        spring_boot_version = '2.0.2.RELEASE'
+        spring_boot_gradle_plugin_version = '2.0.2.RELEASE'
+        slf4j_version = '1.7.25'
+        log4j_version = '2.9.1'
         kotlin_group = "org.jetbrains.kotlin"
-        kotlin_version = "1.2.71"
-
-        corda_group = "net.corda"
-        corda_release_version = "4.0"
-
-        corda_gradle_plugin_group = "net.corda.plugins"
-        corda_gradle_plugin_version = "4.0.45"
-
         junit_group = "org.junit.jupiter"
-        junit_version = "5.3.1"
-
-        log4j_group = "org.apache.logging.log4j"
-        log4j_version = "2.11.2"
-
-        logback_group = "ch.qos.logback"
-        logback_version = "1.2.3"
-
-        jackson_group = "com.fasterxml.jackson.datatype"
-        jackson_version = "2.9.8"
-
         ktor_group = "io.ktor"
         ktor_version = "1.2.2"
         ktor_kotlin_version = "1.3.40"
-
-        cordapp_platform_version = 4
+        logback_group = "ch.qos.logback"
+        logback_version = "1.2.3"
+        jackson_group = "com.fasterxml.jackson.datatype"
+        jackson_version = "2.9.8"
     }
 
     repositories {
         mavenLocal()
         mavenCentral()
         jcenter()
-        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-releases' }
+        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda' }
     }
 
     dependencies {
-        classpath "$kotlin_group:kotlin-gradle-plugin:$ktor_kotlin_version"
-        classpath "$corda_gradle_plugin_group:cordapp:$corda_gradle_plugin_version"
-        classpath "$corda_gradle_plugin_group:cordformation:$corda_gradle_plugin_version"
-        classpath "$corda_gradle_plugin_group:quasar-utils:$corda_gradle_plugin_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "net.corda.plugins:cordapp:$corda_gradle_plugins_version"
+        classpath "net.corda.plugins:cordformation:$corda_gradle_plugins_version"
+        classpath "net.corda.plugins:quasar-utils:$corda_gradle_plugins_version"
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:$spring_boot_gradle_plugin_version"
     }
 }
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-    jcenter()
-    maven { url 'https://jitpack.io' }
-    maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda' }
-    maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+allprojects {
+    apply plugin: 'kotlin'
+
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda' }
+        // Can be removed post-release - used to get nightly snapshot build.
+        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-lib' }
+        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-lib-dev' }
+        maven { url 'https://jitpack.io' }
+        maven { url "https://repo.gradle.org/gradle/libs-releases-local" }
+    }
+
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
+        kotlinOptions {
+            languageVersion = "1.2"
+            apiVersion = "1.2"
+            jvmTarget = "1.8"
+            javaParameters = true   // Useful for reflection.
+        }
+    }
+
+    jar {
+        // Don't include log config files.
+        exclude "**/log4j2*.xml"
+        // We need this because log4j2.xml is pulled in from multiple dependency JARs.
+        // JAR signing will fail if there are multiple files with the same name.
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
 }
 
-apply plugin: 'kotlin'
 apply plugin: 'net.corda.plugins.cordapp'
 apply plugin: 'net.corda.plugins.cordformation'
 apply plugin: 'net.corda.plugins.quasar-utils'
 
-dependencies {
-    // Kotlin Dependencies
-    implementation "$kotlin_group:kotlin-stdlib-jdk8:$kotlin_version"
-
-    // Corda Development Dependencies
-    cordaCompile "$corda_group:corda-core:$corda_release_version"
-
-    // CorDapp Dependencies
-    // TODO : Add cordapp packages to your dependency configuration; for example...
-    // cordapp project(":my-first-cordapp-contract")
-    // cordapp project(":my-first-cordapp-workflow")
-
-    // Corda Deployment Dependencies
-    cordaCompile "$corda_group:corda:$corda_release_version"
-    cordaCompile "$corda_group:corda-node:$corda_release_version"
-    cordaRuntime "$log4j_group:log4j-slf4j-impl:$log4j_version"
-
-    // Test Dependencies
-    testImplementation project(":tex-exchange-test")
-}
-
-jar { exclude '**/log4j2*.xml' }
-
-test { useJUnitPlatform() }
-
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
-    kotlinOptions {
-        languageVersion = "1.2"
-        apiVersion = "1.2"
-        jvmTarget = "1.8"
-        javaParameters = true
+sourceSets {
+    main {
+        resources {
+            srcDir rootProject.file("config/dev")
+        }
     }
 }
 
-task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
+dependencies {
+    // Kotlin.
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
+    // Corda dependencies.
+    cordaCompile "$corda_release_group:corda-core:$corda_release_version"
+    cordaRuntime "$corda_release_group:corda:$corda_release_version"
+
+    // CorDapp dependencies.
+    cordapp project(":tex-exchange-workflows")
+    cordapp project(":tex-exchange-contract")
+
+    // For logging.
+    testCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
+    testCompile "org.apache.logging.log4j:log4j-web:${log4j_version}"
+
+    // Token SDK dependencies.
+    cordapp "$tokens_release_group:tokens-contracts:$tokens_release_version"
+    cordapp "$tokens_release_group:tokens-workflows:$tokens_release_version"
+    cordapp "$tokens_release_group:tokens-money:$tokens_release_version"
+}
+
+task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
     nodeDefaults {
         projectCordapp {
             deploy = false
         }
-        // TODO : Add cordapp packages to your node deployment configuration; for example...
-        // cordapp project(":my-first-cordapp-contract")
-        // cordapp project(":my-first-cordapp-workflow")
-        rpcUsers = [[user: "guest", "password": "letmein", "permissions": ["ALL"]]]
+        cordapp("$tokens_release_group:tokens-contracts:$tokens_release_version")
+        cordapp("$tokens_release_group:tokens-workflows:$tokens_release_version")
+        cordapp("$tokens_release_group:tokens-money:$tokens_release_version")
+        cordapp project(":tex-exchange-contract")
+        cordapp project(":tex-exchange-workflows")
     }
-
     node {
         name "O=Notary,L=London,C=GB"
         notary = [validating: false]
@@ -111,18 +127,17 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
             address("localhost:10003")
             adminAddress("localhost:10043")
         }
-        cordapps.clear()
+        cordapps = []
     }
-
     node {
         name "O=PartyA,L=London,C=GB"
-        p2pPort 10004
+        p2pPort 10005
         rpcSettings {
-            address("localhost:10005")
-            adminAddress("localhost:10045")
+            address("localhost:10006")
+            adminAddress("localhost:10046")
         }
+        rpcUsers = [[user: "user1", "password": "test", "permissions": ["ALL"]]]
     }
-
     node {
         name "O=PartyB,L=New York,C=US"
         p2pPort 10008
@@ -130,14 +145,6 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
             address("localhost:10009")
             adminAddress("localhost:10049")
         }
-    }
-
-    node {
-        name "O=PartyC,L=Paris,C=FR"
-        p2pPort 10012
-        rpcSettings {
-            address("localhost:10013")
-            adminAddress("localhost:10053")
-        }
+        rpcUsers = [[user: "user1", "password": "test", "permissions": ["ALL"]]]
     }
 }
