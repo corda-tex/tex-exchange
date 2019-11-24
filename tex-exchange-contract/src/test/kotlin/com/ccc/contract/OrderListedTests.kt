@@ -15,14 +15,19 @@ import net.corda.testing.node.ledger
 import org.junit.Test
 import java.time.Instant
 
-class OrderListTests {
+class OrderListedTests {
 
     var ledgerServices = MockServices(listOf("com.ccc"))
+
+    val aliceListedSingleAmazonStock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", "AMZN", ALICE.party, 1,true)
+    val aliceUnListedSingleAmazonStock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", "AMZN", ALICE.party, 1)
+    val bobUnListedSingleAppleStock = Stock(UniqueIdentifier(), "Apple APPL 10 units for £10", "APPL", BOB.party, 1)
+    val bobListedSingleAppleStock = Stock(UniqueIdentifier(), "Apple APPL 10 units for £10", "APPL", BOB.party, 1,true)
 
     @Test
     fun mustHandleListCommands() {
         val expiryDateTime = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = aliceUnListedSingleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiryDateTime, ALICE.party, null
@@ -62,7 +67,7 @@ class OrderListTests {
     @Test
     fun mustConsumeOnlyOneInput() {
         val expiryDateTime = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = aliceListedSingleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiryDateTime, ALICE.party, null
@@ -73,7 +78,7 @@ class OrderListTests {
                 command(ALICE.publicKey, OrderContract.Commands.List())
                 command(ALICE.publicKey, StockContract.Commands.List())
                 input(STOCK_CONTRACT_REF, stock)
-                input(STOCK_CONTRACT_REF, Stock(UniqueIdentifier(), "Apple APPL 10 units for £10", BOB.party, false))
+                input(STOCK_CONTRACT_REF, bobUnListedSingleAppleStock)
                 output(ORDER_CONTRACT_REF, order)
                 output(STOCK_CONTRACT_REF, stock.list())
                 timeWindow(TimeWindow.between(Instant.now(), expiryDateTime))
@@ -92,10 +97,14 @@ class OrderListTests {
         }
     }
 
+    /**
+     * This test is throwing Contract exceptions but passing
+     */
+
     @Test
     fun inputStateMustBeOfCorrectType() {
         val expiryDateTime = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = aliceListedSingleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiryDateTime, ALICE.party, null
@@ -117,7 +126,7 @@ class OrderListTests {
     @Test
     fun mustProduceExactlyTwoOutputs() {
         val expiryDateTime = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = aliceUnListedSingleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiryDateTime, ALICE.party, null
@@ -157,7 +166,7 @@ class OrderListTests {
     @Test
     fun listingPriceMustBeGreaterThanZero() {
         val expiryDateTime = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = aliceListedSingleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 0.POUNDS, 10,
             Direction.SELL, expiryDateTime, ALICE.party, null
@@ -179,7 +188,7 @@ class OrderListTests {
     @Test
     fun orderListingsMustBeTimestamped() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = aliceListedSingleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
@@ -200,7 +209,7 @@ class OrderListTests {
     @Test
     fun expiryDateTimeMustBeInTheFuture() {
         val expiry = Instant.now().minusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = aliceUnListedSingleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
@@ -222,7 +231,7 @@ class OrderListTests {
     @Test
     fun onlyTheSellerNeedsToSignTx() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = aliceUnListedSingleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
@@ -254,7 +263,7 @@ class OrderListTests {
     @Test
     fun orderMustHaveNoBuyer() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = aliceUnListedSingleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
@@ -276,7 +285,7 @@ class OrderListTests {
     @Test
     fun onlyOwnerCanListStock() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = aliceUnListedSingleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, BOB.party, null
@@ -298,7 +307,7 @@ class OrderListTests {
     @Test
     fun stockNotAlreadyListed() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, true)
+        val stock = aliceListedSingleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, BOB.party, null
@@ -320,7 +329,7 @@ class OrderListTests {
     @Test
     fun outputStockMustBeListed() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = aliceUnListedSingleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, BOB.party, null
@@ -342,7 +351,7 @@ class OrderListTests {
     @Test
     fun onlyListedPropertyShouldChange() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = aliceUnListedSingleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, BOB.party, null

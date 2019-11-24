@@ -19,7 +19,9 @@ data class Stock
     (
     override val linearId: UniqueIdentifier = UniqueIdentifier(),
     val description: String,
+    val code: String,
     val owner: Party,
+    val count: Int,
     val listed: Boolean = false
 ) : LinearState {
     override val participants: List<AbstractParty> get() = listOf(owner)
@@ -34,14 +36,14 @@ data class Stock
     /**
      * Returns a copy of this Stock which has a new owner and is not listed.
      */
-    fun transfer(newOwner: Party): Stock {
-        return copy(owner = newOwner, listed = false)
+    fun transfer(newOwner: Party, count: Int): Stock {
+        return copy(owner = newOwner, count = count, listed = false)
     }
 
     /**
      * Returns a copy of this Stock which is not listed.
      */
-    fun delist(): Stock {
+    fun deList(): Stock {
         return copy(listed = false)
     }
 

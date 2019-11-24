@@ -22,11 +22,12 @@ import java.time.Instant
 class OrderEndTests {
 
     var ledgerServices = MockServices(listOf("com.ccc.contract"))
+    val singleAmazonStock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", "AMZN", ALICE.party, 1,true)
 
     @Test
     fun onlyOneOrderInput() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, true)
+        val stock = singleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
@@ -37,7 +38,7 @@ class OrderEndTests {
                 input(ORDER_CONTRACT_REF, order)
                 input(ORDER_CONTRACT_REF, order)
                 input(STOCK_CONTRACT_REF, stock)
-                output(STOCK_CONTRACT_REF, stock.delist())
+                output(STOCK_CONTRACT_REF, stock.deList())
                 command(listOf(ALICE.publicKey, BOB.publicKey), OrderContract.Commands.End())
                 command(listOf(ALICE.publicKey, BOB.publicKey), StockContract.Commands.Delist())
                 timeWindow(TimeWindow.fromOnly(Instant.now()))
@@ -47,7 +48,7 @@ class OrderEndTests {
             transaction {
                 input(ORDER_CONTRACT_REF, order)
                 input(STOCK_CONTRACT_REF, stock)
-                output(STOCK_CONTRACT_REF, stock.delist())
+                output(STOCK_CONTRACT_REF, stock.deList())
                 timeWindow(TimeWindow.fromOnly(Instant.now()))
                 command(listOf(ALICE.publicKey, BOB.publicKey), OrderContract.Commands.End())
                 command(listOf(ALICE.publicKey, BOB.publicKey), StockContract.Commands.Delist())
@@ -59,7 +60,7 @@ class OrderEndTests {
     @Test
     fun noOrderOutputs() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = singleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
@@ -69,7 +70,7 @@ class OrderEndTests {
                 input(ORDER_CONTRACT_REF, order)
                 input(STOCK_CONTRACT_REF, stock)
                 output(ORDER_CONTRACT_REF, order)
-                output(STOCK_CONTRACT_REF, stock.delist())
+                output(STOCK_CONTRACT_REF, stock.deList())
                 command(listOf(ALICE.publicKey, BOB.publicKey), OrderContract.Commands.End())
                 command(listOf(ALICE.publicKey, BOB.publicKey), StockContract.Commands.Delist())
                 timeWindow(TimeWindow.fromOnly(Instant.now()))
@@ -81,7 +82,7 @@ class OrderEndTests {
     @Test
     fun mustBeTimestamped() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = singleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
@@ -90,7 +91,7 @@ class OrderEndTests {
             transaction {
                 input(ORDER_CONTRACT_REF, order)
                 input(STOCK_CONTRACT_REF, stock)
-                output(STOCK_CONTRACT_REF, stock.delist())
+                output(STOCK_CONTRACT_REF, stock.deList())
                 command(listOf(ALICE.publicKey, BOB.publicKey), OrderContract.Commands.End())
                 command(listOf(ALICE.publicKey, BOB.publicKey), StockContract.Commands.Delist())
                 this `fails with` "Transaction must be timestamped"
@@ -101,7 +102,7 @@ class OrderEndTests {
     @Test
     fun doesNotHaveToBeExpired() {
         val expiry = Instant.now().minusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, true)
+        val stock = singleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
@@ -110,7 +111,7 @@ class OrderEndTests {
             transaction {
                 input(ORDER_CONTRACT_REF, order)
                 input(STOCK_CONTRACT_REF, stock)
-                output(STOCK_CONTRACT_REF, stock.delist())
+                output(STOCK_CONTRACT_REF, stock.deList())
                 command(listOf(ALICE.publicKey, BOB.publicKey), OrderContract.Commands.End())
                 command(listOf(ALICE.publicKey, BOB.publicKey), StockContract.Commands.Delist())
                 timeWindow(TimeWindow.fromOnly(Instant.now()))
@@ -122,7 +123,7 @@ class OrderEndTests {
     @Test
     fun sellerAndBuyerMustSign() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, true)
+        val stock = singleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
@@ -131,7 +132,7 @@ class OrderEndTests {
             transaction {
                 input(ORDER_CONTRACT_REF, order)
                 input(STOCK_CONTRACT_REF, stock)
-                output(STOCK_CONTRACT_REF, stock.delist())
+                output(STOCK_CONTRACT_REF, stock.deList())
                 timeWindow(TimeWindow.fromOnly(Instant.now()))
                 command(ALICE.publicKey, OrderContract.Commands.End())
                 command(listOf(ALICE.publicKey, BOB.publicKey), StockContract.Commands.Delist())
@@ -141,7 +142,7 @@ class OrderEndTests {
             transaction {
                 input(ORDER_CONTRACT_REF, order)
                 input(STOCK_CONTRACT_REF, stock)
-                output(STOCK_CONTRACT_REF, stock.delist())
+                output(STOCK_CONTRACT_REF, stock.deList())
                 timeWindow(TimeWindow.fromOnly(Instant.now()))
                 command(listOf(ALICE.publicKey, BOB.publicKey, CHARLIE.publicKey), OrderContract.Commands.End())
                 command(listOf(ALICE.publicKey, BOB.publicKey), StockContract.Commands.Delist())
@@ -153,7 +154,7 @@ class OrderEndTests {
     @Test
     fun onlyOneStock() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = singleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
@@ -163,7 +164,7 @@ class OrderEndTests {
                 input(ORDER_CONTRACT_REF, order)
                 input(STOCK_CONTRACT_REF, stock)
                 input(STOCK_CONTRACT_REF, stock)
-                output(STOCK_CONTRACT_REF, stock.delist())
+                output(STOCK_CONTRACT_REF, stock.deList())
                 timeWindow(TimeWindow.fromOnly(Instant.now()))
                 command(listOf(ALICE.publicKey, BOB.publicKey), OrderContract.Commands.End())
                 command(listOf(ALICE.publicKey, BOB.publicKey), StockContract.Commands.Delist())
@@ -173,8 +174,8 @@ class OrderEndTests {
             transaction {
                 input(ORDER_CONTRACT_REF, order)
                 input(STOCK_CONTRACT_REF, stock)
-                output(STOCK_CONTRACT_REF, stock.delist())
-                output(STOCK_CONTRACT_REF, stock.delist())
+                output(STOCK_CONTRACT_REF, stock.deList())
+                output(STOCK_CONTRACT_REF, stock.deList())
                 timeWindow(TimeWindow.fromOnly(Instant.now()))
                 command(listOf(ALICE.publicKey, BOB.publicKey), OrderContract.Commands.End())
                 command(listOf(ALICE.publicKey, BOB.publicKey), StockContract.Commands.Delist())
@@ -186,7 +187,7 @@ class OrderEndTests {
     @Test
     fun ifNoBuyerOnlyOwnerMustSign() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, true)
+        val stock = singleAmazonStock
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
@@ -195,7 +196,7 @@ class OrderEndTests {
             transaction {
                 input(ORDER_CONTRACT_REF, order)
                 input(STOCK_CONTRACT_REF, stock)
-                output(STOCK_CONTRACT_REF, stock.delist())
+                output(STOCK_CONTRACT_REF, stock.deList())
                 timeWindow(TimeWindow.fromOnly(Instant.now()))
                 command(ALICE.publicKey, OrderContract.Commands.End())
                 command(listOf(ALICE.publicKey, BOB.publicKey), StockContract.Commands.Delist())
