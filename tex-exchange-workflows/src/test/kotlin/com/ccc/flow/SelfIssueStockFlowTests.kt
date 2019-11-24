@@ -1,5 +1,6 @@
 package com.ccc.flow
 
+import com.ccc.state.Stock
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.utilities.getOrThrow
@@ -10,6 +11,7 @@ import net.corda.testing.node.TestCordapp
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
 
 /**
  * Questions:
@@ -68,6 +70,8 @@ class SelfIssueStockFlowTests {
         /*execute constructed flow, the call method on the acceptor flow is executed*/
         /* calls verify on Game Contract - no rules for now */
         val stx = future.getOrThrow()
+        var stockState = dealerNodeOne.services.vaultService.queryBy(Stock::class.java)
 
+        assertEquals(1, stockState.states.size)
     }
 }
