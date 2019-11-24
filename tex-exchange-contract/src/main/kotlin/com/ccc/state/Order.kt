@@ -18,7 +18,7 @@ data class Order(
     override val linearId: UniqueIdentifier = UniqueIdentifier(),
     val stockLinearId: UniqueIdentifier, //TODO: Is it possible ReferenceState ?
     val stockDescription: String,
-    val price: Amount<Currency>,
+    val price: Amount<Currency>, //TODO: To check with the team - Have two amounts - price and recievedAmount
     val stockUnits: Int,
     val direction: Direction,
     val expiryDateTime: Instant,
@@ -30,7 +30,7 @@ data class Order(
     /**
      * Returns a copy the order state with a new buying party.
      */
-    fun buy(buyer: Party): Order {
-        return this.copy(buyer = buyer)
+    fun buy(amount: Amount<Currency>, buyer: Party): Order {
+        return this.copy(price = amount, buyer = buyer)
     }
 }
