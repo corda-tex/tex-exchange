@@ -2,6 +2,7 @@ package com.ccc.flow
 
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
+import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
@@ -59,8 +60,14 @@ class SelfIssueStockFlowTests {
 
     @Test
     fun `self issue 1 IBM stock`() {
-        SelfIssueStockFlow("IBM ", "IBM", 1)
-
+        var flow = SelfIssueStockFlow("IBM ", "IBM", 1)
+        val future = dealerNodeOne.startFlow(flow)
+        //When
+        network.runNetwork()
+        //Then
+        /*execute constructed flow, the call method on the acceptor flow is executed*/
+        /* calls verify on Game Contract - no rules for now */
+        val stx = future.getOrThrow()
 
     }
 }
