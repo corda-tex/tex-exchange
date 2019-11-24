@@ -20,13 +20,13 @@ import net.corda.core.utilities.ProgressTracker
  */
 @InitiatingFlow
 @StartableByRPC
-class SelfIssueStockFlow(val description: String) : FlowLogic<UniqueIdentifier>() {
+class SelfIssueStockFlow(val description: String, val code : String, val count : Int) : FlowLogic<UniqueIdentifier>() {
     override val progressTracker = ProgressTracker()
 
     @Suspendable
     override fun call(): UniqueIdentifier {
         //Create a Stock State with the invoker's identity
-        val stock = Stock(description = description, owner = ourIdentity)
+        val stock = Stock(description = description, owner = ourIdentity, count = count, code = code)
         //Create an Issue Stock Command with the invoker's key as the signer
         val command = Command(StockContract.Commands.Issue(), listOf(ourIdentity.owningKey))
         //Use a txBuilder to build a transaction of the Stock and Issue Command

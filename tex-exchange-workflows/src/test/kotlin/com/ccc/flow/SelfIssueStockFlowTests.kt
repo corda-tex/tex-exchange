@@ -59,7 +59,7 @@ class SelfIssueStockFlowTests {
 
     @Test
     fun `self issue 1 IBM stock`() {
-        SelfIssueStockFlow("IBM")
+        SelfIssueStockFlow("IBM ", "IBM", 1)
 
 
     }

@@ -21,7 +21,7 @@ data class Stock
     val description: String,
     val code: String,
     val owner: Party,
-    val count: Int,
+    val count: Int = 1,
     val listed: Boolean = false
 ) : LinearState {
     override val participants: List<AbstractParty> get() = listOf(owner)
