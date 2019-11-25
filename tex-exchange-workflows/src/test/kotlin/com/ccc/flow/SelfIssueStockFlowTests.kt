@@ -44,8 +44,9 @@ class SelfIssueStockFlowTests {
     private val playerNodeMap = HashMap<Party, StartedMockNode>()
 
     init {
-       /* listOf(player1, player2, dealer).forEach {
-            it.registerInitiatedFlow(GameResponder::class.java)
+        /*listOf(dealerNodeOne).forEach {
+            it.registerInitiatedFlow(BroadcastTransactionResponder::class.java)
+            it.registerInitiatedFlow(OrderListFlowResponder::class.java)
         }*/
         playerNodeMap[dealerNodeOne.info.legalIdentities.first()] = dealerNodeOne
         playerNodeMap[dealerNodeTwo.info.legalIdentities.first()] = dealerNodeTwo

@@ -16,6 +16,10 @@ import net.corda.core.identity.Party
  *
  * TODO Should create OwnedStock from Stock, Stock data is agnostic from ownership data
  *
+ * OwnedStock
+ *   Stock - Static Data
+ *   Count - Trading Data
+ *   Owner - Trading Data
  */
 @BelongsToContract(StockContract::class)
 data class Stock
