@@ -13,6 +13,9 @@ import net.corda.core.identity.Party
  * @param owner The Party who owns the  item.
  * @param listed Whether or not the  item is listed in an active sale.
  * @param linearId Unique identifier of a StockState object.
+ *
+ * TODO Should create OwnedStock from Stock, Stock data is agnostic from ownership data
+ *
  */
 @BelongsToContract(StockContract::class)
 data class Stock

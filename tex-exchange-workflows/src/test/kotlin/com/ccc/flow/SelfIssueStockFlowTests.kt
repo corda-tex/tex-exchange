@@ -1,6 +1,8 @@
 package com.ccc.flow
 
 import com.ccc.state.Stock
+import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.TransactionState
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.utilities.getOrThrow
@@ -56,22 +58,20 @@ class SelfIssueStockFlowTests {
     fun tearDown() = network.stopNodes()
 
     @Test
-    fun `createMockNetwork`() {
-        true
-    }
-
-    @Test
     fun `self issue 1 IBM stock`() {
+
         var flow = SelfIssueStockFlow("IBM ", "IBM", 1)
         val future = dealerNodeOne.startFlow(flow)
         //When
         network.runNetwork()
         //Then
         /*execute constructed flow, the call method on the acceptor flow is executed*/
-        /* calls verify on Game Contract - no rules for now */
+        /* calls verify on StockContract*/
         val stx = future.getOrThrow()
         var stockState = dealerNodeOne.services.vaultService.queryBy(Stock::class.java)
-
+        var stock = stockState.states[0].state.data
+        assertEquals(stock.code, "IBM")
         assertEquals(1, stockState.states.size)
+
     }
 }
