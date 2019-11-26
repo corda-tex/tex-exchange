@@ -74,7 +74,8 @@ class OrderListFlow(
         // and
         // Order Contract ID
         // Set a Time window between now and the expiry date of the sell order
-        val txBuilder = TransactionBuilder(notary = serviceHub.networkMapCache.notaryIdentities.first())
+        val notary = serviceHub.networkMapCache.notaryIdentities.first()
+        val txBuilder = TransactionBuilder(notary)
             .withItems(
                 stockStateAndRef,
                 commandStockList,
@@ -88,26 +89,31 @@ class OrderListFlow(
         //Create a Signed Tx
         val signedInitialTx = serviceHub.signInitialTransaction(txBuilder)
         //Create a FinalityFlow and also BroadcastTx to all the parties
-        return subFlow(FinalityFlow(signedInitialTx, emptyList())).also {
-            val broadcastList =
-                serviceHub.networkMapCache.allNodes.map { node -> node.legalIdentities.first() } - inputOrder.seller
-            subFlow(BroadcastTransactionFlow(it, broadcastList))
-        }
+        val tx = subFlow(FinalityFlow(signedInitialTx, emptyList()))
+        val broadcastList =
+            serviceHub.networkMapCache.allNodes.map { node -> node.legalIdentities.first() } - inputOrder.seller - notary
+        subFlow(BroadcastTransactionFlow(tx, broadcastList))
+        return tx
+
+     //   return subFlow(FinalityFlow(signedInitialTx, emptyList()))
+
         //TODO: Take the output state of the Sell Order and figure out the UUID of the sell order
     }
 }
 
-@InitiatedBy(OrderListFlow::class)
+
+/*@InitiatedBy(OrderListFlow::class)
 class OrderListFlowResponder(val otherSideSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
         val signedTransactionFlow = object : SignTransactionFlow(otherSideSession) {
             override fun checkTransaction(stx: SignedTransaction) = requireThat {
-                // TODO: Add additional checks here
+
             }
         }
-        subFlow(signedTransactionFlow)
+
         subFlow(ReceiveFinalityFlow(otherSideSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
+        subFlow(BroadcastTransactionResponder(otherSideSession))
     }
 
-}
+}*/

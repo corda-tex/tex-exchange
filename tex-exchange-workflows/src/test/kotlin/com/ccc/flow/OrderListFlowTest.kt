@@ -37,14 +37,16 @@ class OrderListFlowTest {
     private val dealerNodeTwo = network.createNode(CordaX500Name("dealerNodeTwo", "", "GB"))
     private val playerNodeMap = HashMap<Party, StartedMockNode>()
 
-    init {
-        listOf(dealerNodeOne).forEach {
+/*    init {
+        listOf(dealerNodeOne,dealerNodeTwo).forEach {
             it.registerInitiatedFlow(BroadcastTransactionResponder::class.java)
             it.registerInitiatedFlow(OrderListFlowResponder::class.java)
         }
         playerNodeMap[dealerNodeOne.info.legalIdentities.first()] = dealerNodeOne
         playerNodeMap[dealerNodeTwo.info.legalIdentities.first()] = dealerNodeTwo
-    }
+    }*/
+
+
 
     @Before
     fun setup() = network.runNetwork()
@@ -54,11 +56,13 @@ class OrderListFlowTest {
 
     @Test
     fun `publish sell order for issue 1 IBM stock`() {
+      //  dealerNodeTwo.registerInitiatedFlow(BroadcastTransactionFlow::class.java)
+
         val stock = selfIssue()
         val stockPrice =  Amount.fromDecimal(BigDecimal.ONE, Currency.getInstance(Locale.getDefault()), RoundingMode.DOWN)
         val orderListFlow = OrderListFlow(stock.linearId, stockPrice, stock.count, Instant.now().plus(Duration.ofDays(1)))
         dealerNodeOne.startFlow(orderListFlow)
-        network.runNetwork(2)
+        network.runNetwork()
         val order = dealerNodeOne.services.vaultService.queryBy(Order::class.java)
         assert(order.states.isNotEmpty())
     }

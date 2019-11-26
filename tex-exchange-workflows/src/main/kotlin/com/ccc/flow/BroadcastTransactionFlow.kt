@@ -16,8 +16,10 @@ class BroadcastTransactionFlow(
 
     @Suspendable
     override fun call() {
-        recepients.stream().forEach {
-            val otherSideSession = initiateFlow(it)
+        val partyIterator = recepients.iterator()
+        while (partyIterator.hasNext()) {
+            val party = partyIterator.next()
+            val otherSideSession = initiateFlow(party)
             subFlow(SendTransactionFlow(otherSideSession, stx))
         }
     }
