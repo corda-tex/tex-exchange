@@ -104,12 +104,13 @@ dependencies {
     // For logging.
     testCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
     testCompile "org.apache.logging.log4j:log4j-web:${log4j_version}"
+    testCompile("org.assertj:assertj-core:3.11.1")
 
     // Token SDK dependencies.
     cordapp "$tokens_release_group:tokens-contracts:$tokens_release_version"
     cordapp "$tokens_release_group:tokens-workflows:$tokens_release_version"
     cordapp "$tokens_release_group:tokens-money:$tokens_release_version"
-
+    cordaRuntime "net.corda:corda-node-api:$corda_release_version"
 }
 
 task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
@@ -159,5 +160,10 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
             adminAddress("localhost:10052")
         }
         rpcUsers = [[user: "user1", "password": "test", "permissions": ["ALL"]]]
+    }
+}
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 }
