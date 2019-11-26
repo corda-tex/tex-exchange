@@ -58,7 +58,7 @@ class OrderListFlowTest {
         val stockPrice =  Amount.fromDecimal(BigDecimal.ONE, Currency.getInstance(Locale.getDefault()), RoundingMode.DOWN)
         val orderListFlow = OrderListFlow(stock.linearId, stockPrice, stock.count, Instant.now().plus(Duration.ofDays(1)))
         dealerNodeOne.startFlow(orderListFlow)
-        network.runNetwork()
+        network.runNetwork(2)
         val order = dealerNodeOne.services.vaultService.queryBy(Order::class.java)
         assert(order.states.isNotEmpty())
     }
