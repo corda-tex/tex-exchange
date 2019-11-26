@@ -1,9 +1,12 @@
 package com.ccc.flow
 
+import com.ccc.state.Order
 import com.ccc.state.Stock
+import net.corda.core.contracts.Amount
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.utilities.getOrThrow
+import net.corda.finance.AMOUNT
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
@@ -11,23 +14,16 @@ import net.corda.testing.node.TestCordapp
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.time.Duration
+import java.time.Instant
+import java.util.*
+import kotlin.collections.HashMap
 import kotlin.test.assertEquals
 
-/**
- * Questions:
- *
- *  Is there a responder flow for SelfIssue , I guess not. ?
- */
 
-/**
- * Notes:
- *
- * The Network is made of dealer nodes. Each node can selfIssue independently.
- */
-
-
-class SelfIssueStockFlowTests {
-
+class OrderListFlowTest {
     /**
      * Create Mock Network
      */
@@ -42,10 +38,10 @@ class SelfIssueStockFlowTests {
     private val playerNodeMap = HashMap<Party, StartedMockNode>()
 
     init {
-        /*listOf(dealerNodeOne).forEach {
+        listOf(dealerNodeOne).forEach {
             it.registerInitiatedFlow(BroadcastTransactionResponder::class.java)
             it.registerInitiatedFlow(OrderListFlowResponder::class.java)
-        }*/
+        }
         playerNodeMap[dealerNodeOne.info.legalIdentities.first()] = dealerNodeOne
         playerNodeMap[dealerNodeTwo.info.legalIdentities.first()] = dealerNodeTwo
     }
@@ -57,20 +53,25 @@ class SelfIssueStockFlowTests {
     fun tearDown() = network.stopNodes()
 
     @Test
-    fun `self issue 1 IBM stock`() {
-
-        var flow = SelfIssueStockFlow("IBM ", "IBM", 1)
-        val future = dealerNodeOne.startFlow(flow)
-        //When
+    fun `publish sell order for issue 1 IBM stock`() {
+        val stock = selfIssue()
+        val stockPrice =  Amount.fromDecimal(BigDecimal.ONE, Currency.getInstance(Locale.getDefault()), RoundingMode.DOWN)
+        val orderListFlow = OrderListFlow(stock.linearId, stockPrice, stock.count, Instant.now().plus(Duration.ofDays(1)))
+        dealerNodeOne.startFlow(orderListFlow)
         network.runNetwork()
-        //Then
-        /*execute constructed flow, the call method on the acceptor flow is executed*/
-        /* calls verify on StockContract*/
-        val stx = future.getOrThrow()
-        var stockState = dealerNodeOne.services.vaultService.queryBy(Stock::class.java)
-        var stock = stockState.states[0].state.data
-        assertEquals(stock.code, "IBM")
-        assertEquals(1, stockState.states.size)
-
+        val order = dealerNodeOne.services.vaultService.queryBy(Order::class.java)
+        assert(order.states.isNotEmpty())
     }
+
+    private fun selfIssue() : Stock {
+        val flow = SelfIssueStockFlow("IBM ", "IBM", 10)
+        dealerNodeOne.startFlow(flow)
+
+        network.runNetwork()
+
+        val stockState = dealerNodeOne.services.vaultService.queryBy(Stock::class.java)
+        return stockState.states[0].state.data
+    }
+
+
 }
