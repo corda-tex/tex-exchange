@@ -16,8 +16,10 @@ class BroadcastTransactionFlow(
 
     @Suspendable
     override fun call() {
-        recepients.stream().forEach {
-            val otherSideSession = initiateFlow(it)
+        val partyIterator = recepients.iterator()
+        while (partyIterator.hasNext()) {
+            val party = partyIterator.next()
+            val otherSideSession = initiateFlow(party)
             subFlow(SendTransactionFlow(otherSideSession, stx))
         }
     }
@@ -28,6 +30,8 @@ class BroadcastTransactionFlow(
  **/
 @InitiatedBy(BroadcastTransactionFlow::class)
 class BroadcastTransactionResponder(private val otherSideSession: FlowSession) : FlowLogic<Unit>() {
+
+    override val progressTracker = ProgressTracker()
 
     @Suspendable
     override fun call() {
