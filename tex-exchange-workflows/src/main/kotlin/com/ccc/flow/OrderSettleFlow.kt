@@ -39,11 +39,13 @@ class OrderSettleFlow(val orderID: UniqueIdentifier) : FlowLogic<SignedTransacti
         val inputStock = stockStateAndRef.state.data
         val outputStock = inputStock.transfer(order.buyer!!)
         //Create a Command to transfer the Stock
-        val stockTransferCommand = Command(StockContract.Commands.Transfer(), outputStock.participants.map { it.owningKey })
+        val stockTransferSigners = outputStock.participants.map { it.owningKey } + order.buyer!!.owningKey
+        val stockTransferCommand = Command(StockContract.Commands.Transfer(), stockTransferSigners )
         //Create a Command to settle the Order
         val orderSettleCommand = Command(OrderContract.Commands.Settle(), order.participants.map { it.owningKey })
         //Create a txBuilder
-        val txBuilder = TransactionBuilder(notary = serviceHub.networkMapCache.notaryIdentities.first())
+        val notary = serviceHub.networkMapCache.notaryIdentities.first()
+        val txBuilder = TransactionBuilder(notary = notary)
         //Place all the above contents in the txBuilder
         txBuilder.addInputState(stockStateAndRef)
             .addInputState(orderStateAndRef)
@@ -60,13 +62,15 @@ class OrderSettleFlow(val orderID: UniqueIdentifier) : FlowLogic<SignedTransacti
         //Use the flowSessions of everyOneElse and CollectSignatures
         val signAllTx = subFlow(CollectSignaturesFlow(signInitialTx, flowSessionsOfEveryoneElse))
         //FinalityFlow and also broadcast to everyone in the network that this Sell Order has end
-        return subFlow(FinalityFlow(signAllTx, flowSessionsOfEveryoneElse)).also {
-            val broadcastParties = serviceHub.networkMapCache.allNodes.map { nodeInfo -> nodeInfo.legalIdentities.first() } - order.participants
-            subFlow(BroadcastTransactionFlow(it, broadcastParties))
+            val tx = subFlow(FinalityFlow(signAllTx, flowSessionsOfEveryoneElse))
+/*            val broadcastList =
+                serviceHub.networkMapCache.allNodes.map { node -> node.legalIdentities.first() } - order.seller - notary
+            subFlow(BroadcastTransactionFlow(tx, broadcastList))*/
+            return tx
         }
-    }
-
 }
+
+
 
 @InitiatedBy(OrderSettleFlow::class)
 class OrderSettleFlowResponder(val flowSession: FlowSession) : FlowLogic<Unit>() {
