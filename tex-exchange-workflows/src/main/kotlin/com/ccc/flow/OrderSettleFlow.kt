@@ -12,6 +12,7 @@ import net.corda.core.flows.*
 import net.corda.core.node.StatesToRecord
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.utilities.ProgressTracker
 
 /**
  * Take the Order
@@ -23,6 +24,8 @@ import net.corda.core.transactions.TransactionBuilder
 @InitiatingFlow
 @StartableByRPC
 class OrderSettleFlow(val orderID: UniqueIdentifier) : FlowLogic<SignedTransaction>() {
+    override val progressTracker = ProgressTracker()
+
     @Suspendable
     override fun call(): SignedTransaction {
         //Get the Order and its StateAndRef
@@ -65,7 +68,7 @@ class OrderSettleFlow(val orderID: UniqueIdentifier) : FlowLogic<SignedTransacti
 
 }
 
-@InitiatedBy(OrderEndFlow::class)
+@InitiatedBy(OrderSettleFlow::class)
 class OrderSettleFlowResponder(val flowSession: FlowSession) : FlowLogic<Unit>() {
     override fun call() {
         val signedTransactionFlow = object : SignTransactionFlow(flowSession) {
