@@ -75,7 +75,7 @@ class DriverBasedTest {
 
     //TODO: Is it possible to reduce the time taken to execute this test ?
     @Test
-    fun `node test1`() {
+    fun `Issue Stock, Create Order and Broadcast of the Order should store the Order in the couterpartys vault`() {
         driver(driverParameters) {
             val (A, B) = nodeParams.map { params -> startNode(params) }.transpose().getOrThrow()
             log.info("All nodes started up.")

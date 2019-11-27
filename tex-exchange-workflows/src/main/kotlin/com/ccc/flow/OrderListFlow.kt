@@ -96,19 +96,3 @@ class OrderListFlow(
         //TODO: Take the output state of the Sell Order and figure out the UUID of the sell order
     }
 }
-
-/*
-@InitiatedBy(OrderListFlow::class)
-class OrderListFlowResponder(val otherSideSession: FlowSession) : FlowLogic<Unit>() {
-    @Suspendable
-    override fun call() {
-        val signedTransactionFlow = object : SignTransactionFlow(otherSideSession) {
-            override fun checkTransaction(stx: SignedTransaction) = requireThat {
-                // TODO: Add additional checks here
-            }
-        }
-        subFlow(signedTransactionFlow)
-        subFlow(ReceiveFinalityFlow(otherSideSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
-    }
-
-}*/
