@@ -39,10 +39,6 @@ class OrderListFlow(
         val stock = serviceHub.vaultService.queryBy(Stock::class.java)
         val stockStateAndRef = stock.states.find { it.state.data.linearId == stockID }
             ?: throw IllegalArgumentException("Stock with '$stockID' does not exist")
-        //Check if the Stock is open for listing. Else, throw an Exception
-        if (stockStateAndRef.state.data.listed) {
-            throw IllegalArgumentException("The stock is already listed")
-        }
         //Create a Sell Order
         val inputOrder = Order(
             stockLinearId = stockID,
