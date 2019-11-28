@@ -31,8 +31,7 @@ class OrderListFlow(
     val expiry: Instant
 ) : FlowLogic<SignedTransaction>() {
 
-    override val progressTracker: ProgressTracker?
-        get() = ProgressTracker()
+    override val progressTracker = ProgressTracker()
 
     @Suspendable
     override fun call(): SignedTransaction {
@@ -40,10 +39,6 @@ class OrderListFlow(
         val stock = serviceHub.vaultService.queryBy(Stock::class.java)
         val stockStateAndRef = stock.states.find { it.state.data.linearId == stockID }
             ?: throw IllegalArgumentException("Stock with '$stockID' does not exist")
-        //Check if the Stock is open for listing. Else, throw an Exception
-        if (stockStateAndRef.state.data.listed) {
-            throw IllegalArgumentException("The stock is already listed")
-        }
         //Create a Sell Order
         val inputOrder = Order(
             stockLinearId = stockID,
@@ -56,7 +51,7 @@ class OrderListFlow(
             buyer = null
         )
         //Create a Stock state with listed set to be true
-        val outputStock = stockStateAndRef.state.data.copy(listed = true)
+        val outputStock = stockStateAndRef.state.data.list()
         //Create a Command to list the stock
         val commandStockList = Command(StockContract.Commands.List(), ourIdentity.owningKey)
         //Create a Command to list the Sell order
@@ -90,30 +85,10 @@ class OrderListFlow(
         val signedInitialTx = serviceHub.signInitialTransaction(txBuilder)
         //Create a FinalityFlow and also BroadcastTx to all the parties
         val tx = subFlow(FinalityFlow(signedInitialTx, emptyList()))
-        val broadcastList =
-            serviceHub.networkMapCache.allNodes.map { node -> node.legalIdentities.first() } - inputOrder.seller - notary
-        subFlow(BroadcastTransactionFlow(tx, broadcastList))
+            val broadcastList =
+                serviceHub.networkMapCache.allNodes.map { node -> node.legalIdentities.first() } - inputOrder.seller - notary
+            subFlow(BroadcastTransactionFlow(tx, broadcastList))
         return tx
-
-     //   return subFlow(FinalityFlow(signedInitialTx, emptyList()))
-
         //TODO: Take the output state of the Sell Order and figure out the UUID of the sell order
     }
 }
-
-
-/*@InitiatedBy(OrderListFlow::class)
-class OrderListFlowResponder(val otherSideSession: FlowSession) : FlowLogic<Unit>() {
-    @Suspendable
-    override fun call() {
-        val signedTransactionFlow = object : SignTransactionFlow(otherSideSession) {
-            override fun checkTransaction(stx: SignedTransaction) = requireThat {
-
-            }
-        }
-
-        subFlow(ReceiveFinalityFlow(otherSideSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
-        subFlow(BroadcastTransactionResponder(otherSideSession))
-    }
-
-}*/

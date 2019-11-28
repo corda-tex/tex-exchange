@@ -1,19 +1,62 @@
 package com.ccc
 
+import com.ccc.flow.OrderListFlow
+import com.ccc.flow.SelfIssueStockFlow
+import com.ccc.state.Order
+import com.ccc.state.Stock
+import net.corda.core.concurrent.CordaFuture
+import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.CordaX500Name
+import net.corda.core.internal.concurrent.doneFuture
+import net.corda.core.internal.concurrent.transpose
+import net.corda.core.messaging.CordaRPCOps
+import net.corda.core.messaging.startFlow
+import net.corda.core.toFuture
+import net.corda.core.transactions.SignedTransaction
+import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.getOrThrow
+import net.corda.finance.POUNDS
+import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
-import net.corda.testing.driver.DriverDSL
-import net.corda.testing.driver.DriverParameters
-import net.corda.testing.driver.NodeHandle
-import net.corda.testing.driver.driver
+import net.corda.testing.driver.*
+import net.corda.testing.node.TestCordapp
 import org.junit.Test
+import java.time.Instant
 import java.util.concurrent.Future
 import kotlin.test.assertEquals
 
 class DriverBasedTest {
-    private val sellerBroker = TestIdentity(CordaX500Name("BrokerA", "", "GB"))
-    private val buyerBroker = TestIdentity(CordaX500Name("BrokerB", "", "US"))
+    companion object {
+        private val log = contextLogger()
+    }
+
+    private val brokerAParameters = NodeParameters(
+        providedName = CordaX500Name("BrokerA", "London", "GB"),
+        additionalCordapps = listOf()
+    )
+
+    private val brokerBParameters = NodeParameters(
+        providedName = CordaX500Name("BrokerB", "London", "GB"),
+        additionalCordapps = listOf()
+    )
+
+    private val nodeParams = listOf(brokerAParameters, brokerBParameters)
+
+    private val sellerBroker = TestIdentity(brokerAParameters.providedName!!)
+    private val buyerBroker = TestIdentity(brokerBParameters.providedName!!)
+
+    private val defaultCorDapps = listOf(
+        TestCordapp.findCordapp("com.ccc.flow"),
+        TestCordapp.findCordapp("com.ccc.contract")
+    )
+    private val driverParameters = DriverParameters(
+        startNodesInProcess = false,
+        cordappsForAllNodes = defaultCorDapps,
+        networkParameters = testNetworkParameters(notaries = emptyList(), minimumPlatformVersion = 4)
+    )
+
+    fun NodeHandle.legalIdentity() = nodeInfo.legalIdentities.single()
+
 
     @Test
     fun `node test`() = withDriver {
@@ -27,6 +70,34 @@ class DriverBasedTest {
         // and other important metrics to ensure that your CorDapp is working as intended.
         assertEquals(buyerBroker.name, partyAHandle.resolveName(buyerBroker.name))
         assertEquals(sellerBroker.name, partyBHandle.resolveName(sellerBroker.name))
+    }
+
+
+    //TODO: Is it possible to reduce the time taken to execute this test ?
+    @Test
+    fun `Issue Stock, Create Order and Broadcast of the Order should store the Order in the couterpartys vault`() {
+        driver(driverParameters) {
+            val (A, B) = nodeParams.map { params -> startNode(params) }.transpose().getOrThrow()
+            log.info("All nodes started up.")
+
+            log.info("Creating one Stock on node A.")
+            val stockIdentity =
+                A.rpc.startFlow(::SelfIssueStockFlow, "Google GOOGL 10 units").returnValue.getOrThrow()
+
+            // Check that A recorded all the new accounts.
+            val aStock = A.rpc.vaultQuery(Stock::class.java).states.single().state.data
+            assertEquals(aStock.description, "Google GOOGL 10 units")
+            assertEquals(stockIdentity, aStock.linearId)
+
+            log.info("Create an Order and List it to parties")
+            val signedTransaction =
+                A.rpc.startFlow(::OrderListFlow, stockIdentity, 10.POUNDS, 10, Instant.now().plusSeconds(200))
+                    .returnValue.getOrThrow()
+            log.info("Test Complete")
+            Thread.sleep(3000)
+            val bOrder = B.rpc.vaultQuery(Order::class.java).states.single().state.data
+            assertEquals(bOrder.stockLinearId, stockIdentity)
+        }
     }
 
     // Runs a test inside the Driver DSL, which provides useful functions for starting nodes, etc.
@@ -44,4 +115,22 @@ class DriverBasedTest {
     private fun DriverDSL.startNodes(vararg identities: TestIdentity) = identities
         .map { startNode(providedName = it.name) }
         .waitForAll()
+
+    fun CordaRPCOps.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTransaction> {
+        val (snapshot, feed) = internalVerifiedTransactionsFeed()
+        return if (tx in snapshot) {
+            doneFuture(tx)
+        } else {
+            feed.filter { it.id == tx.id }.toFuture()
+        }
+    }
+
+    fun CordaRPCOps.watchForTransaction(txId: SecureHash): CordaFuture<SignedTransaction> {
+        val (snapshot, feed) = internalVerifiedTransactionsFeed()
+        return if (txId in snapshot.map { it.id }) {
+            doneFuture(snapshot.single { txId == it.id })
+        } else {
+            feed.filter { it.id == txId }.toFuture()
+        }
+    }
 }

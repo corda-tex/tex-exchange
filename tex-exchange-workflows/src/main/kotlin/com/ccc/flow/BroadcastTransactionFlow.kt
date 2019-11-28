@@ -31,6 +31,8 @@ class BroadcastTransactionFlow(
 @InitiatedBy(BroadcastTransactionFlow::class)
 class BroadcastTransactionResponder(private val otherSideSession: FlowSession) : FlowLogic<Unit>() {
 
+    override val progressTracker = ProgressTracker()
+
     @Suspendable
     override fun call() {
         subFlow(ReceiveTransactionFlow(otherSideSession, statesToRecord = StatesToRecord.ALL_VISIBLE))

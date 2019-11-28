@@ -7,8 +7,11 @@ import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.Party
 import net.corda.finance.POUNDS
+import net.corda.finance.contracts.asset.Cash
 import org.junit.Test
+import java.math.BigDecimal
 import java.time.Instant
+import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
@@ -136,8 +139,8 @@ class OrderTests {
             ALICE.party,
             null
         )
-        val newOrder = order.buy(BOB.party)
+        val newOrder = order.buy(100.POUNDS,  BOB.party)
         assertEquals(BOB.party, newOrder.buyer)
-        assertEquals(order, newOrder.copy(buyer = order.buyer))
+        assertEquals(100.POUNDS, newOrder.price)
     }
 }
