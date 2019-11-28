@@ -33,7 +33,7 @@ class OrderEndFlow(val orderID: UniqueIdentifier) : FlowLogic<SignedTransaction>
         val stockStateAndRef =
             requireNotNull(stockStatesPages.states.find { it.state.data.linearId == order.stockLinearId })
         val inputStock = stockStateAndRef.state.data
-        val outputStock = inputStock.delist()
+        val outputStock = inputStock.deList()
         //Create a Command to delist the Stock
         val stockDelistCommand = Command(StockContract.Commands.Delist(), outputStock.participants.map { it.owningKey })
         //Create a Command to end the Order

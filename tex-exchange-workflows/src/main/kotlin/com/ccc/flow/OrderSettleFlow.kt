@@ -37,7 +37,7 @@ class OrderSettleFlow(val orderID: UniqueIdentifier) : FlowLogic<SignedTransacti
         val stockStateAndRef =
             requireNotNull(stockStatesPages.states.find { it.state.data.linearId == order.stockLinearId })
         val inputStock = stockStateAndRef.state.data
-        val outputStock = inputStock.transfer(order.buyer!!)
+        val outputStock = inputStock.transfer(order.buyer!!,1)
         //Create a Command to transfer the Stock
         val stockTransferCommand = Command(StockContract.Commands.Transfer(), outputStock.participants.map { it.owningKey })
         //Create a Command to settle the Order

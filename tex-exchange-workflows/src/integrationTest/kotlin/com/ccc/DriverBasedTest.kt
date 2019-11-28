@@ -82,7 +82,7 @@ class DriverBasedTest {
 
             log.info("Creating one Stock on node A.")
             val stockIdentity =
-                A.rpc.startFlow(::SelfIssueStockFlow, "Google GOOGL 10 units").returnValue.getOrThrow()
+                A.rpc.startFlow(::SelfIssueStockFlow, "Google GOOGL 10 units","GOOGL", 1).returnValue.getOrThrow()
 
             // Check that A recorded all the new accounts.
             val aStock = A.rpc.vaultQuery(Stock::class.java).states.single().state.data
