@@ -9,6 +9,7 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.flows.*
+import net.corda.core.node.StatesToRecord
 import java.util.*
 
 /**
@@ -54,9 +55,9 @@ class OrderBuyFlow(val orderID: UniqueIdentifier, val amount: Amount<Currency>) 
         val flowSessions = everyOneElse.map { initiateFlow(it) }
         // CollectSignaturesFlow with the people
         val signedByAllTx = subFlow(CollectSignaturesFlow(signedInitialTx, flowSessions))
-        return signedByAllTx
-        // Finality Flow with the above mentioned people - Is this required? TODO: Check with Ramiz
-        //return subFlow(FinalityFlow(signedByAllTx, everyOneElse.toMutableSet()))
+        //return signedByAllTx
+        // Finality Flow with the above mentioned people
+        return subFlow(FinalityFlow(signedByAllTx, everyOneElse.toMutableSet()))
     }
 }
 
@@ -69,6 +70,6 @@ class OrderBuyFlowResponder(val flowSession: FlowSession) : FlowLogic<Unit>() {
             }
         }
         subFlow(signedTransactionFlow)
-       // subFlow(ReceiveFinalityFlow(flowSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
+        subFlow(ReceiveFinalityFlow(flowSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
     }
 }
