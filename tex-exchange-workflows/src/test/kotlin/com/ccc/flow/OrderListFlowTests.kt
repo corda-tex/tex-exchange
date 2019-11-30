@@ -31,6 +31,7 @@ class OrderListFlowTests {
     private lateinit var buyerNode: StartedMockNode
     private lateinit var seller: Party
     private lateinit var buyer: Party
+    private val businessId = "Order001"
 
     @Before
     fun setup() {
@@ -52,7 +53,7 @@ class OrderListFlowTests {
     @Test
     fun `OrderListFlow will not find not existent stock`() {
         val stock = Stock("stock not in vault", "code", seller, 1)
-        val flow = OrderListFlow(stock.linearId, ONE_POUND, stock.count, ONE_DAY)
+        val flow = OrderListFlow(businessId, stock.linearId, ONE_POUND, stock.count, ONE_DAY)
         assertFailsWith<StockNotFoundException> {
             sellerNode.startFlow(flow).getOrThrow()
         }
@@ -65,7 +66,7 @@ class OrderListFlowTests {
         val stock = sellerNode.services.vaultService.queryBy(Stock::class.java).states[0].state.data
         assert(issuedStockId == stock.linearId)
 
-        val orderListFlow = OrderListFlow(stock.linearId, ONE_POUND, stock.count, ONE_DAY)
+        val orderListFlow = OrderListFlow(businessId, stock.linearId, ONE_POUND, stock.count, ONE_DAY)
         val future = sellerNode.startFlow(orderListFlow)
         network.runNetwork()
         future.getOrThrow() // wait until orderListFlow is completed.
