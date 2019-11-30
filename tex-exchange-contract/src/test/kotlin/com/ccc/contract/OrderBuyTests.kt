@@ -24,14 +24,13 @@ class OrderBuyTests {
     var ledgerServices = MockServices(
             listOf("com.ccc.contract"))
 
-    val singleAmazonStock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", "AMZN", ALICE.party, 1,true)
-
+    val businessId = "Order001"
+    val singleAmazonStock = Stock("Amazon AMZN 10 units for £10", "AMZN", ALICE.party, 1,true,UniqueIdentifier())
 
     @Ignore
     fun mustHandleBuyCommands() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
-        val businessId = "Order001"
         val orderInput = Order(
             UniqueIdentifier(), businessId,stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
@@ -63,7 +62,6 @@ class OrderBuyTests {
     fun mustHaveOneInputOneOutputState() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
-        val businessId = "Order001"
         val orderInput = Order(
             UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
@@ -105,7 +103,6 @@ class OrderBuyTests {
     fun mustBeTimestamped() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
-        val businessId = "Order001"
         val orderInput = Order(
             UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
@@ -136,7 +133,6 @@ class OrderBuyTests {
     fun sellOrderMustNotBeExpired() {
         val expiry = Instant.now().minusSeconds(3600)
         val stock = singleAmazonStock
-        val businessId = "Order001"
         val orderInput = Order(
             UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
@@ -161,7 +157,6 @@ class OrderBuyTests {
     fun inputStateTypeMustBeOrder() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
-        val businessId = "Order001"
         val orderOutput = Order(
             UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
@@ -183,7 +178,6 @@ class OrderBuyTests {
     fun outputStateTypeMustBeOrder() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
-        val businessId = "Order001"
         val orderInput = Order(
             UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
@@ -215,7 +209,6 @@ class OrderBuyTests {
     fun buyerMustChange() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
-        val businessId = "Order001"
         val orderInput = Order(
             UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
@@ -255,7 +248,6 @@ class OrderBuyTests {
     fun buyerMustNotBeNull() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
-        val businessId = "Order001"
         val orderInput = Order(
             UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null

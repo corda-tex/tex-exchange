@@ -19,10 +19,10 @@ class OrderListedTests {
 
     var ledgerServices = MockServices(listOf("com.ccc"))
 
-    val aliceListedSingleAmazonStock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", "AMZN", ALICE.party, 1,true)
-    val aliceUnListedSingleAmazonStock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", "AMZN", ALICE.party, 1)
-    val bobUnListedSingleAppleStock = Stock(UniqueIdentifier(), "Apple APPL 10 units for £10", "APPL", BOB.party, 1)
-    val bobListedSingleAppleStock = Stock(UniqueIdentifier(), "Apple APPL 10 units for £10", "APPL", BOB.party, 1,true)
+    val aliceListedSingleAmazonStock = Stock( "Amazon AMZN 10 units for £10", "AMZN", ALICE.party, 1,true, UniqueIdentifier())
+    val aliceUnListedSingleAmazonStock = Stock( "Amazon AMZN 10 units for £10", "AMZN", ALICE.party, 1,false,  UniqueIdentifier())
+    val bobUnListedSingleAppleStock = Stock( "Apple APPL 10 units for £10", "APPL", BOB.party, 1, false, UniqueIdentifier())
+    val bobListedSingleAppleStock = Stock( "Apple APPL 10 units for £10", "APPL", BOB.party, 1,true,  UniqueIdentifier())
     val businessId = "Order001"
 
     @Test

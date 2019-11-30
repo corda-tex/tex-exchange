@@ -22,7 +22,7 @@ import java.time.Instant
 class OrderEndTests {
 
     var ledgerServices = MockServices(listOf("com.ccc.contract"))
-    val singleAmazonStock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", "AMZN", ALICE.party, 1,true)
+    val singleAmazonStock = Stock( "Amazon AMZN 10 units for £10", "AMZN", ALICE.party, 1,true, UniqueIdentifier())
     val businessId = "Order001"
 
     @Test
