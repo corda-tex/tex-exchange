@@ -23,17 +23,3 @@ class BroadcastTransactionFlow(
         }
     }
 }
-
-/**
- * This is the initiated Flow. The states will be recorded in the vault. You can use the vault query or vault query observer to figure out new listings
- **/
-class BroadcastTransactionResponder(private val otherSideSession: FlowSession) : FlowLogic<Unit>() {
-
-    override val progressTracker = ProgressTracker()
-
-    @Suspendable
-    override fun call() {
-        subFlow(ReceiveTransactionFlow(otherSideSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
-    }
-
-}
