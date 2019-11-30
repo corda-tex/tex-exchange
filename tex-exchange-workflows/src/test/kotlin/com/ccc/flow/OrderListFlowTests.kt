@@ -20,7 +20,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.test.assertFailsWith
 
-class OrderListFlowTest {
+class OrderListFlowTests {
     companion object {
         val ONE_POUND = Amount.fromDecimal(BigDecimal(1), GBP)
         val ONE_DAY = Instant.now().plus(Duration.ofDays(1))
