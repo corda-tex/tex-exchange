@@ -77,6 +77,7 @@ class DriverBasedTest {
     @Test
     fun `Issue Stock, Create Order and Broadcast of the Order should store the Order in the couterpartys vault`() {
         driver(driverParameters) {
+            val businessId = "Order001"
             val (A, B) = nodeParams.map { params -> startNode(params) }.transpose().getOrThrow()
             log.info("All nodes started up.")
 
@@ -91,7 +92,7 @@ class DriverBasedTest {
 
             log.info("Create an Order and List it to parties")
             val signedTransaction =
-                A.rpc.startFlow(::OrderListFlow, stockIdentity, 10.POUNDS, 10, Instant.now().plusSeconds(200))
+                A.rpc.startFlow(::OrderListFlow, businessId, stockIdentity, 10.POUNDS, 10, Instant.now().plusSeconds(200))
                     .returnValue.getOrThrow()
             log.info("Test Complete")
             Thread.sleep(3000)

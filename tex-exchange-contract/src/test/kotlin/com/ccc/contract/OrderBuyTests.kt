@@ -31,12 +31,13 @@ class OrderBuyTests {
     fun mustHandleBuyCommands() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
+        val businessId = "Order001"
         val orderInput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId,stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
         )
         val orderOutput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId,stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
         )
 
@@ -62,12 +63,13 @@ class OrderBuyTests {
     fun mustHaveOneInputOneOutputState() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
+        val businessId = "Order001"
         val orderInput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
         )
         val orderOutput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
         )
         ledgerServices.ledger {
@@ -103,12 +105,13 @@ class OrderBuyTests {
     fun mustBeTimestamped() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
+        val businessId = "Order001"
         val orderInput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
         )
         val orderOutput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
         )
         ledgerServices.ledger {
@@ -133,12 +136,13 @@ class OrderBuyTests {
     fun sellOrderMustNotBeExpired() {
         val expiry = Instant.now().minusSeconds(3600)
         val stock = singleAmazonStock
+        val businessId = "Order001"
         val orderInput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
         )
         val orderOutput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
         )
 
@@ -157,8 +161,9 @@ class OrderBuyTests {
     fun inputStateTypeMustBeOrder() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
+        val businessId = "Order001"
         val orderOutput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
         )
 
@@ -178,12 +183,13 @@ class OrderBuyTests {
     fun outputStateTypeMustBeOrder() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
+        val businessId = "Order001"
         val orderInput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
         )
         val orderOutput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
         )
         ledgerServices.ledger {
@@ -209,12 +215,13 @@ class OrderBuyTests {
     fun buyerMustChange() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
+        val businessId = "Order001"
         val orderInput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
         )
         var orderOutput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
         )
         ledgerServices.ledger {
@@ -227,11 +234,11 @@ class OrderBuyTests {
             }
 
             orderOutput = Order(
-                UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+                UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
                 Direction.SELL, expiry, ALICE.party, BOB.party
             )
             orderOutput = Order(
-                UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+                UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
                 Direction.SELL, expiry, ALICE.party, BOB.party
             )
             transaction {
@@ -248,12 +255,13 @@ class OrderBuyTests {
     fun buyerMustNotBeNull() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
+        val businessId = "Order001"
         val orderInput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
         )
         val orderOutput = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
         )
 

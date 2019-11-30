@@ -16,6 +16,7 @@ enum class Direction { SELL }
 @BelongsToContract(OrderContract::class)
 data class Order(
     override val linearId: UniqueIdentifier = UniqueIdentifier(),
+    val businessId :  String,
     val stockLinearId: UniqueIdentifier, //TODO: Is it possible ReferenceState ?
     val stockDescription: String,
     val price: Amount<Currency>, //TODO: To check with the team - Have two amounts - price and recievedAmount

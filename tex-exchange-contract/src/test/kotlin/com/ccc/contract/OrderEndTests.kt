@@ -23,13 +23,14 @@ class OrderEndTests {
 
     var ledgerServices = MockServices(listOf("com.ccc.contract"))
     val singleAmazonStock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", "AMZN", ALICE.party, 1,true)
+    val businessId = "Order001"
 
     @Test
     fun onlyOneOrderInput() {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
         )
 
@@ -62,7 +63,7 @@ class OrderEndTests {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
         )
         ledgerServices.ledger {
@@ -84,7 +85,7 @@ class OrderEndTests {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
         )
         ledgerServices.ledger {
@@ -104,7 +105,7 @@ class OrderEndTests {
         val expiry = Instant.now().minusSeconds(3600)
         val stock = singleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
         )
         ledgerServices.ledger {
@@ -125,7 +126,7 @@ class OrderEndTests {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
         )
         ledgerServices.ledger {
@@ -156,7 +157,7 @@ class OrderEndTests {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
         )
         ledgerServices.ledger {
@@ -189,7 +190,7 @@ class OrderEndTests {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = singleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
         )
         ledgerServices.ledger {

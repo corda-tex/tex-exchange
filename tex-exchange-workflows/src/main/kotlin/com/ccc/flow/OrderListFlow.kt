@@ -25,6 +25,7 @@ import java.util.*
 @InitiatingFlow
 @StartableByRPC
 class OrderListFlow(
+    val businessId : String,
     val stockID: UniqueIdentifier,
     val price: Amount<Currency>,
     val stockUnits: Int,
@@ -48,7 +49,8 @@ class OrderListFlow(
             direction = Direction.SELL,
             expiryDateTime = expiry,
             seller = ourIdentity,
-            buyer = null
+            buyer = null,
+            businessId = businessId
         )
         //Create a Stock state with listed set to be true
         val outputStock = stockStateAndRef.state.data.list()

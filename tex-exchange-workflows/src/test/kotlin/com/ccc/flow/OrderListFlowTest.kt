@@ -2,6 +2,9 @@ package com.ccc.flow
 
 import com.ccc.state.Order
 import com.ccc.state.Stock
+import com.ccc.util.Constants
+import com.ccc.util.Constants.Companion.ORDER_SEQUENCE
+import com.ccc.util.DefaultSequenceGenerator
 import net.corda.core.contracts.Amount
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -36,15 +39,19 @@ class OrderListFlowTest {
     private val dealerNodeOne = network.createNode(CordaX500Name("dealerNodeOne", "", "GB"))
     private val dealerNodeTwo = network.createNode(CordaX500Name("dealerNodeTwo", "", "GB"))
     private val playerNodeMap = HashMap<Party, StartedMockNode>()
+    private val sequenceGenerator = DefaultSequenceGenerator()
 
-/*    init {
-        listOf(dealerNodeOne,dealerNodeTwo).forEach {
+
+    init {
+        /*listOf(dealerNodeOne,dealerNodeTwo).forEach {
             it.registerInitiatedFlow(BroadcastTransactionResponder::class.java)
             it.registerInitiatedFlow(OrderListFlowResponder::class.java)
         }
         playerNodeMap[dealerNodeOne.info.legalIdentities.first()] = dealerNodeOne
-        playerNodeMap[dealerNodeTwo.info.legalIdentities.first()] = dealerNodeTwo
-    }*/
+        playerNodeMap[dealerNodeTwo.info.legalIdentities.first()] = dealerNodeTwo*/
+
+        sequenceGenerator.addSequence(ORDER_SEQUENCE)
+    }
 
 
 
@@ -56,16 +63,19 @@ class OrderListFlowTest {
 
     @Test
     fun `publish sell order for issue 1 IBM stock`() {
-      //  dealerNodeTwo.registerInitiatedFlow(BroadcastTransactionFlow::class.java)
-
+        var orderNextSequence = sequenceGenerator.getNextSequence(ORDER_SEQUENCE)
         val stock = selfIssue()
         val stockPrice =  Amount.fromDecimal(BigDecimal.ONE, Currency.getInstance(Locale.getDefault()), RoundingMode.DOWN)
-        val orderListFlow = OrderListFlow(stock.linearId, stockPrice, stock.count, Instant.now().plus(Duration.ofDays(1)))
+        val orderListFlow = OrderListFlow(orderNextSequence, stock.linearId, stockPrice, stock.count, Instant.now().plus(Duration.ofDays(1)))
+
         dealerNodeOne.startFlow(orderListFlow)
         network.runNetwork()
         val order = dealerNodeOne.services.vaultService.queryBy(Order::class.java)
+
         assert(order.states.isNotEmpty())
     }
+
+
 
     private fun selfIssue() : Stock {
         val flow = SelfIssueStockFlow("IBM ", "IBM", 10)

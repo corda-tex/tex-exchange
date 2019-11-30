@@ -23,13 +23,14 @@ class OrderListedTests {
     val aliceUnListedSingleAmazonStock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", "AMZN", ALICE.party, 1)
     val bobUnListedSingleAppleStock = Stock(UniqueIdentifier(), "Apple APPL 10 units for £10", "APPL", BOB.party, 1)
     val bobListedSingleAppleStock = Stock(UniqueIdentifier(), "Apple APPL 10 units for £10", "APPL", BOB.party, 1,true)
+    val businessId = "Order001"
 
     @Test
     fun mustHandleListCommands() {
         val expiryDateTime = Instant.now().plusSeconds(3600)
         val stock = aliceUnListedSingleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiryDateTime, ALICE.party, null
         )
 
@@ -69,7 +70,7 @@ class OrderListedTests {
         val expiryDateTime = Instant.now().plusSeconds(3600)
         val stock = aliceListedSingleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiryDateTime, ALICE.party, null
         )
 
@@ -106,7 +107,7 @@ class OrderListedTests {
         val expiryDateTime = Instant.now().plusSeconds(3600)
         val stock = aliceListedSingleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiryDateTime, ALICE.party, null
         )
 
@@ -128,7 +129,7 @@ class OrderListedTests {
         val expiryDateTime = Instant.now().plusSeconds(3600)
         val stock = aliceUnListedSingleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiryDateTime, ALICE.party, null
         )
 
@@ -168,7 +169,7 @@ class OrderListedTests {
         val expiryDateTime = Instant.now().plusSeconds(3600)
         val stock = aliceListedSingleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 0.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 0.POUNDS, 10,
             Direction.SELL, expiryDateTime, ALICE.party, null
         )
 
@@ -190,7 +191,7 @@ class OrderListedTests {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = aliceListedSingleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
         )
 
@@ -211,7 +212,7 @@ class OrderListedTests {
         val expiry = Instant.now().minusSeconds(3600)
         val stock = aliceUnListedSingleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
         )
 
@@ -233,7 +234,7 @@ class OrderListedTests {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = aliceUnListedSingleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
         )
 
@@ -265,7 +266,7 @@ class OrderListedTests {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = aliceUnListedSingleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
         )
 
@@ -287,7 +288,7 @@ class OrderListedTests {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = aliceUnListedSingleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, BOB.party, null
         )
 
@@ -309,7 +310,7 @@ class OrderListedTests {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = aliceListedSingleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, BOB.party, null
         )
 
@@ -331,7 +332,7 @@ class OrderListedTests {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = aliceUnListedSingleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, BOB.party, null
         )
 
@@ -353,7 +354,7 @@ class OrderListedTests {
         val expiry = Instant.now().plusSeconds(3600)
         val stock = aliceUnListedSingleAmazonStock
         val order = Order(
-            UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
+            UniqueIdentifier(), businessId, stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, BOB.party, null
         )
 
