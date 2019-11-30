@@ -7,6 +7,7 @@ import com.ccc.util.DefaultSequenceGenerator
 import net.corda.core.contracts.Amount
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
+import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
@@ -87,9 +88,11 @@ class OrderListFlowTest {
         assert(order!!.state.data.businessId == orderNextSequence)
 
         val orderCancelFlow = OrderCancelFlow(orderNextSequence)
-        dealerNodeOne.startFlow(orderCancelFlow)
+        var future = dealerNodeOne.startFlow(orderCancelFlow)
         network.runNetwork()
+        future.getOrThrow() // wait until orderListFlow is completed.
         val orders2 = dealerNodeOne.services.vaultService.queryBy(Order::class.java)
+        assert(orders2.states.isNotEmpty())
         val order2 = orders2.states.find { it.state.data.businessId == orderNextSequence }
         assert(order2!!.state.data.businessId == orderNextSequence)
     }
