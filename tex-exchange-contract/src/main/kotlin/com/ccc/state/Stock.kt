@@ -15,13 +15,13 @@ import net.corda.core.identity.Party
  * @param linearId Unique identifier of a StockState object.
  */
 @BelongsToContract(StockContract::class)
-data class Stock
-    (
-    override val linearId: UniqueIdentifier = UniqueIdentifier(),
-    val description: String,
-    val owner: Party,
-    val listed: Boolean = false
-) : LinearState {
+data class Stock(val description: String,
+                 val code: String,
+                 val owner: Party,
+                 val count: Int = 1,
+                 val listed: Boolean = false,
+                 override val linearId: UniqueIdentifier = UniqueIdentifier()) : LinearState {
+
     override val participants: List<AbstractParty> get() = listOf(owner)
 
     /**
@@ -44,6 +44,5 @@ data class Stock
     fun delist(): Stock {
         return copy(listed = false)
     }
-
 
 }
