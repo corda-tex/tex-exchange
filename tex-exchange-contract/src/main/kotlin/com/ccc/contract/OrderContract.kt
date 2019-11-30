@@ -107,7 +107,7 @@ class OrderContract : Contract {
                       //Number of Commands
                       //Number inputs
                     "There must be only one Order input" using (tx.inputsOfType(Order::class.java).size == 1)
-                    "There must zero Order outputs" using tx.outputsOfType(Order::class.java).none()
+                   // "There must zero Order outputs" using tx.outputsOfType(Order::class.java).none()
                     timeWindow?.fromTime ?: throw IllegalArgumentException("Transaction must be timestamped")
 
                     //Content Constraints
