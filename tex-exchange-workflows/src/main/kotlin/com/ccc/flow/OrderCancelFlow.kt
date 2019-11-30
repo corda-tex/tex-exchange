@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ccc.contract.OrderContract
 import com.ccc.contract.StockContract
 import com.ccc.state.Order
+import com.ccc.state.OrderStatus
 import com.ccc.state.Stock
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.TimeWindow
@@ -24,7 +25,8 @@ class OrderCancelFlow(private val businessId: String) : FlowLogic<SignedTransact
         //Get the Order and its StateAndRef
         val orderStatesPage = serviceHub.vaultService.queryBy(Order::class.java)
         val orderStateAndRef = requireNotNull(orderStatesPage.states.find { it.state.data.businessId == businessId })
-        val cancelledOrder = orderStateAndRef.state.data
+        val order = orderStateAndRef.state.data
+        val cancelledOrder = order.copy(orderStatus = OrderStatus.CANCELLED)
         //Get the Stock and its StateAndRef
         val stockStatesPages = serviceHub.vaultService.queryBy(Stock::class.java)
         val stockStateAndRef =

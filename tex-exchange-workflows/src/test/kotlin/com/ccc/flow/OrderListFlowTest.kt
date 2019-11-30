@@ -1,6 +1,7 @@
 package com.ccc.flow
 
 import com.ccc.state.Order
+import com.ccc.state.OrderStatus
 import com.ccc.state.Stock
 import com.ccc.util.Constants.Companion.ORDER_SEQUENCE
 import com.ccc.util.DefaultSequenceGenerator
@@ -93,8 +94,10 @@ class OrderListFlowTest {
         future.getOrThrow() // wait until orderListFlow is completed.
         val orders2 = dealerNodeOne.services.vaultService.queryBy(Order::class.java)
         assert(orders2.states.isNotEmpty())
-        val order2 = orders2.states.find { it.state.data.businessId == orderNextSequence }
-        assert(order2!!.state.data.businessId == orderNextSequence)
+        val orderState = orders2.states.find { it.state.data.businessId == orderNextSequence }
+        val order2 = orderState!!.state.data
+        assert(order2.businessId == orderNextSequence)
+        assert(order2.orderStatus == OrderStatus.CANCELLED)
     }
 
 
