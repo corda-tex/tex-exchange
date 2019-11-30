@@ -10,34 +10,15 @@ import net.corda.testing.node.TestCordapp
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import kotlin.collections.HashMap
-import org.assertj.core.api.Assertions.*
-import org.junit.Ignore
-import java.util.*
-
+import kotlin.test.assertEquals
 
 class SelfIssueStockFlowTests {
 
-    /**
-     * Create Mock Network
-     */
-    private val network = MockNetwork(
-        MockNetworkParameters(cordappsForAllNodes = listOf(
-            TestCordapp.findCordapp("com.ccc.contract"),
-            TestCordapp.findCordapp("com.ccc.flow")
-        ))
-    )
-    private val dealerNodeOne = network.createNode(CordaX500Name("dealerNodeOne", "", "GB"))
-    private val dealerNodeTwo = network.createNode(CordaX500Name("dealerNodeTwo", "", "GB"))
-    private val playerNodeMap = HashMap<Party, StartedMockNode>()
+    private val network = MockNetwork(MockNetworkParameters(cordappsForAllNodes = listOf(
+                TestCordapp.findCordapp("com.ccc.contract"),
+                TestCordapp.findCordapp("com.ccc.flow"))))
 
-    init {
-        /* listOf(player1, player2, dealer).forEach {
-             it.registerInitiatedFlow(GameResponder::class.java)
-         }*/
-        playerNodeMap[dealerNodeOne.info.legalIdentities.first()] = dealerNodeOne
-        playerNodeMap[dealerNodeTwo.info.legalIdentities.first()] = dealerNodeTwo
-    }
+    private val issueNode = network.createNode(CordaX500Name("issuer", "", "GB"))
 
     @Before
     fun setup() = network.runNetwork()
@@ -45,12 +26,14 @@ class SelfIssueStockFlowTests {
     @After
     fun tearDown() = network.stopNodes()
 
-    @Ignore
-    fun `self issue 1 IBM stock`() {
-        val selfIssueStockFlow = SelfIssueStockFlow("IBM")
-        val future = dealerNodeOne.startFlow(selfIssueStockFlow)
-        network.runNetwork()
-        val result = future.toCompletableFuture().get()
-        assertThat(result.id).isInstanceOf(UUID::class.java)
+    @Test
+    fun `SelfIssueStockFlow issues stock`() {
+        var flow = SelfIssueStockFlow("IBM ", "IBM", 1)
+        issueNode.startFlow(flow).get() // Future#get waits for the flow to be completed.
+        var stockState = issueNode.services.vaultService.queryBy(Stock::class.java)
+        var stock = stockState.states[0].state.data
+        assertEquals(stock.code, "IBM")
+        assertEquals(1, stockState.states.size)
     }
+
 }
