@@ -98,6 +98,28 @@ class OrderContract : Contract {
                 }
             }
         }
+
+        class Cancel : TypeOnlyCommandData(), Commands {
+            override fun verifyCommand(tx: LedgerTransaction, signers: Set<PublicKey>) {
+                val timeWindow: TimeWindow? = tx.timeWindow
+                requireThat {
+                    //Shape Constraints
+                      //Number of Commands
+                      //Number inputs
+                    "There must be only one Order input" using (tx.inputsOfType(Order::class.java).size == 1)
+                    "There must zero Order outputs" using tx.outputsOfType(Order::class.java).none()
+                    timeWindow?.fromTime ?: throw IllegalArgumentException("Transaction must be timestamped")
+
+                    //Content Constraints
+                    val stockCommand = tx.commandsOfType(StockContract.Commands::class.java).single()
+                    "StockCommand must be of type Delist" using (stockCommand.value is StockContract.Commands.Delist)
+
+                    //Required Signers
+                    val inputOrder = tx.inputsOfType(Order::class.java).single()
+                    "Seller must sign cancel transaction" using (signers == setOf(inputOrder.seller.owningKey))
+                }
+            }
+        }
     }
 
     /**

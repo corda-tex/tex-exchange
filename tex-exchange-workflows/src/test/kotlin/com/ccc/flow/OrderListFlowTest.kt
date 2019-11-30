@@ -2,14 +2,11 @@ package com.ccc.flow
 
 import com.ccc.state.Order
 import com.ccc.state.Stock
-import com.ccc.util.Constants
 import com.ccc.util.Constants.Companion.ORDER_SEQUENCE
 import com.ccc.util.DefaultSequenceGenerator
 import net.corda.core.contracts.Amount
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
-import net.corda.core.utilities.getOrThrow
-import net.corda.finance.AMOUNT
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
@@ -23,7 +20,6 @@ import java.time.Duration
 import java.time.Instant
 import java.util.*
 import kotlin.collections.HashMap
-import kotlin.test.assertEquals
 
 
 class OrderListFlowTest {
@@ -63,16 +59,39 @@ class OrderListFlowTest {
 
     @Test
     fun `publish sell order for issue 1 IBM stock`() {
-        var orderNextSequence = sequenceGenerator.getNextSequence(ORDER_SEQUENCE)
+        val orderNextSequence = sequenceGenerator.getNextSequence(ORDER_SEQUENCE)
         val stock = selfIssue()
         val stockPrice =  Amount.fromDecimal(BigDecimal.ONE, Currency.getInstance(Locale.getDefault()), RoundingMode.DOWN)
         val orderListFlow = OrderListFlow(orderNextSequence, stock.linearId, stockPrice, stock.count, Instant.now().plus(Duration.ofDays(1)))
 
         dealerNodeOne.startFlow(orderListFlow)
         network.runNetwork()
-        val order = dealerNodeOne.services.vaultService.queryBy(Order::class.java)
+        val orders = dealerNodeOne.services.vaultService.queryBy(Order::class.java)
+        assert(orders.states.isNotEmpty())
+        val order = orders.states.find { it.state.data.businessId == orderNextSequence }
+        assert(order!!.state.data.businessId == orderNextSequence)
+    }
 
-        assert(order.states.isNotEmpty())
+    @Test
+    fun `cancel order`() {
+        val orderNextSequence = sequenceGenerator.getNextSequence(ORDER_SEQUENCE)
+        val stock = selfIssue()
+        val stockPrice =  Amount.fromDecimal(BigDecimal.ONE, Currency.getInstance(Locale.getDefault()), RoundingMode.DOWN)
+        val orderListFlow = OrderListFlow(orderNextSequence, stock.linearId, stockPrice, stock.count, Instant.now().plus(Duration.ofDays(1)))
+
+        dealerNodeOne.startFlow(orderListFlow)
+        network.runNetwork()
+        val orders = dealerNodeOne.services.vaultService.queryBy(Order::class.java)
+        assert(orders.states.isNotEmpty())
+        val order = orders.states.find { it.state.data.businessId == orderNextSequence }
+        assert(order!!.state.data.businessId == orderNextSequence)
+
+        val orderCancelFlow = OrderCancelFlow(orderNextSequence)
+        dealerNodeOne.startFlow(orderCancelFlow)
+        network.runNetwork()
+        val orders2 = dealerNodeOne.services.vaultService.queryBy(Order::class.java)
+        val order2 = orders2.states.find { it.state.data.businessId == orderNextSequence }
+        assert(order2!!.state.data.businessId == orderNextSequence)
     }
 
 
