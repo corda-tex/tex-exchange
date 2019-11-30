@@ -99,13 +99,10 @@ class OrderListFlow(
 class OrderListFlowResponder(val otherSideSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
-        val signedTransactionFlow = object : SignTransactionFlow(otherSideSession) {
-            override fun checkTransaction(stx: SignedTransaction) = requireThat {
-                // TODO: Add additional checks here
-            }
+        val receiveTransactionFlow = object : ReceiveTransactionFlow(otherSideSession, statesToRecord = StatesToRecord.ALL_VISIBLE) {
+            override fun checkBeforeRecording(stx: SignedTransaction) {/* add tx checks */}
         }
-        subFlow(ReceiveFinalityFlow(otherSideSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
-        subFlow(signedTransactionFlow)
+        subFlow(receiveTransactionFlow)
     }
 
 }
