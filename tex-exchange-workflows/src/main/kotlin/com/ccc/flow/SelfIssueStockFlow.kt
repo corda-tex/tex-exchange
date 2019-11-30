@@ -20,20 +20,22 @@ import net.corda.core.utilities.ProgressTracker
  */
 @InitiatingFlow
 @StartableByRPC
-class SelfIssueStockFlow(val description: String, val code : String, val count : Int) : FlowLogic<UniqueIdentifier>() {
+class SelfIssueStockFlow(val description: String,
+                         val code : String,
+                         val count : Int) : FlowLogic<UniqueIdentifier>() {
+
     override val progressTracker = ProgressTracker()
 
     @Suspendable
     override fun call(): UniqueIdentifier {
         //Create a Stock State with the invoker's identity
-        val stock = Stock(description = description, owner = ourIdentity, count = count, code = code)
+        val stock = Stock(description, code, owner = ourIdentity, count = count)
         //Create an Issue Stock Command with the invoker's key as the signer
         val command = Command(StockContract.Commands.Issue(), listOf(ourIdentity.owningKey))
         //Use a txBuilder to build a transaction of the Stock and Issue Command
         //TO REMEMBER : When we use the Cordite's notary, the following line has to be altered to reflect that. We may use Cordite's notary for metering
         val builder = TransactionBuilder(notary = serviceHub.networkMapCache.notaryIdentities.first())
         builder.withItems(StateAndContract(stock, STOCK_CONTRACT_REF), command)
-        builder.verify(serviceHub)
         //Get the tx verified using the Issue command
         builder.verify(serviceHub)
         //Sign the tx

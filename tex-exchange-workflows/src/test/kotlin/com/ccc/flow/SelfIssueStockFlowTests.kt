@@ -3,7 +3,6 @@ package com.ccc.flow
 import com.ccc.state.Stock
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
-import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
@@ -13,42 +12,13 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 
-/**
- * Questions:
- *
- *  Is there a responder flow for SelfIssue , I guess not. ?
- */
-
-/**
- * Notes:
- *
- * The Network is made of dealer nodes. Each node can selfIssue independently.
- */
-
-
 class SelfIssueStockFlowTests {
 
-    /**
-     * Create Mock Network
-     */
-    private val network = MockNetwork(
-        MockNetworkParameters(cordappsForAllNodes = listOf(
-            TestCordapp.findCordapp("com.ccc.contract"),
-            TestCordapp.findCordapp("com.ccc.flow")
-        ))
-    )
-    private val dealerNodeOne = network.createNode(CordaX500Name("dealerNodeOne", "", "GB"))
-    private val dealerNodeTwo = network.createNode(CordaX500Name("dealerNodeTwo", "", "GB"))
-    private val playerNodeMap = HashMap<Party, StartedMockNode>()
+    private val network = MockNetwork(MockNetworkParameters(cordappsForAllNodes = listOf(
+                TestCordapp.findCordapp("com.ccc.contract"),
+                TestCordapp.findCordapp("com.ccc.flow"))))
 
-    init {
-        /*listOf(dealerNodeOne).forEach {
-            it.registerInitiatedFlow(BroadcastTransactionResponder::class.java)
-            it.registerInitiatedFlow(OrderListFlowResponder::class.java)
-        }*/
-        playerNodeMap[dealerNodeOne.info.legalIdentities.first()] = dealerNodeOne
-        playerNodeMap[dealerNodeTwo.info.legalIdentities.first()] = dealerNodeTwo
-    }
+    private val issueNode = network.createNode(CordaX500Name("issuer", "", "GB"))
 
     @Before
     fun setup() = network.runNetwork()
@@ -57,20 +27,13 @@ class SelfIssueStockFlowTests {
     fun tearDown() = network.stopNodes()
 
     @Test
-    fun `self issue 1 IBM stock`() {
-
+    fun `SelfIssueStockFlow issues stock`() {
         var flow = SelfIssueStockFlow("IBM ", "IBM", 1)
-        val future = dealerNodeOne.startFlow(flow)
-        //When
-        network.runNetwork()
-        //Then
-        /*execute constructed flow, the call method on the acceptor flow is executed*/
-        /* calls verify on StockContract*/
-        val stx = future.getOrThrow()
-        var stockState = dealerNodeOne.services.vaultService.queryBy(Stock::class.java)
+        issueNode.startFlow(flow).get() // Future#get waits for the flow to be completed.
+        var stockState = issueNode.services.vaultService.queryBy(Stock::class.java)
         var stock = stockState.states[0].state.data
         assertEquals(stock.code, "IBM")
         assertEquals(1, stockState.states.size)
-
     }
+
 }
