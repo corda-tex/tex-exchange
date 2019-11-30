@@ -6,12 +6,16 @@ import com.ccc.contract.StockContract
 import com.ccc.state.Direction
 import com.ccc.state.Order
 import com.ccc.state.Stock
+import net.corda.core.CordaException
 import net.corda.core.contracts.*
 import net.corda.core.flows.*
 import net.corda.core.node.StatesToRecord
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
+import java.lang.Exception
+import java.lang.IllegalArgumentException
+import java.lang.IllegalStateException
 import java.time.Instant
 import java.util.*
 
@@ -38,18 +42,16 @@ class OrderListFlow(
         //Find the Stock from the vault
         val stock = serviceHub.vaultService.queryBy(Stock::class.java)
         val stockStateAndRef = stock.states.find { it.state.data.linearId == stockID }
-            ?: throw IllegalArgumentException("Stock with '$stockID' does not exist")
+            ?: throw StockNotFoundException(stockID)
         //Create a Sell Order
-        val inputOrder = Order(
-            stockLinearId = stockID,
-            stockDescription = stockStateAndRef.state.data.description,
-            price = price,
-            stockUnits = stockUnits,
-            direction = Direction.SELL,
-            expiryDateTime = expiry,
-            seller = ourIdentity,
-            buyer = null
-        )
+        val inputOrder = Order( stockLinearId = stockID,
+                                stockDescription = stockStateAndRef.state.data.description,
+                                price = price,
+                                stockUnits = stockUnits,
+                                direction = Direction.SELL,
+                                expiryDateTime = expiry,
+                                seller = ourIdentity,
+                                buyer = null)
         //Create a Stock state with listed set to be true
         val outputStock = stockStateAndRef.state.data.list()
         //Create a Command to list the stock
@@ -85,10 +87,27 @@ class OrderListFlow(
         val signedInitialTx = serviceHub.signInitialTransaction(txBuilder)
         //Create a FinalityFlow and also BroadcastTx to all the parties
         val tx = subFlow(FinalityFlow(signedInitialTx, emptyList()))
-            val broadcastList =
-                serviceHub.networkMapCache.allNodes.map { node -> node.legalIdentities.first() } - inputOrder.seller - notary
-            subFlow(BroadcastTransactionFlow(tx, broadcastList))
+        val broadcastList = serviceHub.networkMapCache.allNodes
+                                       .map { node -> node.legalIdentities.first() } - inputOrder.seller - notary
+        subFlow(BroadcastTransactionFlow(tx, broadcastList))
         return tx
         //TODO: Take the output state of the Sell Order and figure out the UUID of the sell order
     }
 }
+
+@InitiatedBy(OrderListFlow::class)
+class OrderListFlowResponder(val otherSideSession: FlowSession) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        val signedTransactionFlow = object : SignTransactionFlow(otherSideSession) {
+            override fun checkTransaction(stx: SignedTransaction) = requireThat {
+                // TODO: Add additional checks here
+            }
+        }
+        subFlow(ReceiveFinalityFlow(otherSideSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
+        subFlow(signedTransactionFlow)
+    }
+
+}
+
+class StockNotFoundException(stockID: UniqueIdentifier) : IllegalStateException("Stock with '$stockID' does not exist")
