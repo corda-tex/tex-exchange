@@ -59,7 +59,7 @@ class OrderListFlowTests {
     }
 
     @Test
-    fun `OrderListFlow publishes and broadcasts to counter parties`() {
+    fun `OrderListFlow publishes and sends to counter party`() {
         // Issue stock and assert it exists in seller's vault.
         val issuedStockId = sellerNode.startFlow(SelfIssueStockFlow("IBM ", "IBM", 1)).get()
         val stock = sellerNode.services.vaultService.queryBy(Stock::class.java).states[0].state.data
@@ -71,6 +71,25 @@ class OrderListFlowTests {
         future.getOrThrow() // wait until orderListFlow is completed.
         val order = buyerNode.services.vaultService.queryBy(Order::class.java)
         assert(order.states.isNotEmpty())
+    }
+
+    @Test
+    fun `OrderListFlow publishes and broadcasts to counter parties`() {
+        // Issue stock and assert it exists in seller's vault.
+        val issuedStockId = sellerNode.startFlow(SelfIssueStockFlow("IBM ", "IBM", 1)).get()
+        val stock = sellerNode.services.vaultService.queryBy(Stock::class.java).states[0].state.data
+        assert(issuedStockId == stock.linearId)
+
+        val orderListFlow = OrderListFlow(stock.linearId, ONE_POUND, stock.count, ONE_DAY)
+        // Create another buyer here.
+        val buyerNodeLocal = network.createNode(CordaX500Name("_buyerNode", "", "GB"))
+        val future = sellerNode.startFlow(orderListFlow)
+        network.runNetwork()
+        future.getOrThrow() // wait until orderListFlow is completed.
+        val order = buyerNode.services.vaultService.queryBy(Order::class.java)
+        val orderLocal = buyerNodeLocal.services.vaultService.queryBy(Order::class.java)
+        assert(order.states.isNotEmpty())
+        assert(orderLocal.states.isNotEmpty())
     }
 
 }
