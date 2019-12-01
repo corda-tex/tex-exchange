@@ -82,14 +82,14 @@ class OrderListFlowTests {
 
         val orderListFlow = OrderListFlow(stock.linearId, ONE_POUND, stock.count, ONE_DAY)
         // Create another buyer here.
-        val buyerNodeLocal = network.createNode(CordaX500Name("_buyerNode", "", "GB"))
+        val buyerNode2 = network.createNode(CordaX500Name("buyerNode2", "", "GB"))
         val future = sellerNode.startFlow(orderListFlow)
         network.runNetwork()
         future.getOrThrow() // wait until orderListFlow is completed.
         val order = buyerNode.services.vaultService.queryBy(Order::class.java)
-        val orderLocal = buyerNodeLocal.services.vaultService.queryBy(Order::class.java)
+        val orderInBuyer2 = buyerNode2.services.vaultService.queryBy(Order::class.java)
         assert(order.states.isNotEmpty())
-        assert(orderLocal.states.isNotEmpty())
+        assert(orderInBuyer2.states.isNotEmpty())
     }
 
 }
