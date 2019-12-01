@@ -6,15 +6,12 @@ import com.ccc.contract.StockContract
 import com.ccc.state.Direction
 import com.ccc.state.Order
 import com.ccc.state.Stock
-import net.corda.core.CordaException
 import net.corda.core.contracts.*
 import net.corda.core.flows.*
 import net.corda.core.node.StatesToRecord
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
-import java.lang.Exception
-import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.time.Instant
 import java.util.*
@@ -30,7 +27,7 @@ import java.util.*
 @StartableByRPC
 class OrderListFlow(
     val stockID: UniqueIdentifier,
-    val price: Amount<Currency>,
+    val stockPrice: Amount<Currency>,
     val stockUnits: Int,
     val expiry: Instant
 ) : FlowLogic<SignedTransaction>() {
@@ -46,7 +43,7 @@ class OrderListFlow(
         //Create a Sell Order
         val inputOrder = Order( stockLinearId = stockID,
                                 stockDescription = stockStateAndRef.state.data.description,
-                                price = price,
+                                price = stockPrice,
                                 stockUnits = stockUnits,
                                 direction = Direction.SELL,
                                 expiryDateTime = expiry,
@@ -86,11 +83,11 @@ class OrderListFlow(
         //Create a Signed Tx
         val signedInitialTx = serviceHub.signInitialTransaction(txBuilder)
         //Create a FinalityFlow and also BroadcastTx to all the parties
-        val tx = subFlow(FinalityFlow(signedInitialTx, emptyList()))
-        val broadcastList = serviceHub.networkMapCache.allNodes
-                                       .map { node -> node.legalIdentities.first() } - inputOrder.seller - notary
-        subFlow(BroadcastTransactionFlow(tx, broadcastList))
-        return tx
+        val counterPartiesSessions = serviceHub.networkMapCache.allNodes
+            .asSequence()
+            .filter { it.legalIdentities.first() != inputOrder.seller && it.legalIdentities.first() != notary }
+            .map { it.legalIdentities.first() }.map { initiateFlow(it) }.toSet()
+        return subFlow(FinalityFlow(signedInitialTx, counterPartiesSessions))
         //TODO: Take the output state of the Sell Order and figure out the UUID of the sell order
     }
 }
