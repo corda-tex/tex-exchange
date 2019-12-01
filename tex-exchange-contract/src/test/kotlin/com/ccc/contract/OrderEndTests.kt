@@ -26,7 +26,7 @@ class OrderEndTests {
     @Test
     fun onlyOneOrderInput() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, true)
+        val stock = Stock("description", "code", ALICE.party, listed = true)
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
@@ -59,7 +59,7 @@ class OrderEndTests {
     @Test
     fun noOrderOutputs() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = Stock("description", "code", ALICE.party)
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
@@ -81,7 +81,7 @@ class OrderEndTests {
     @Test
     fun mustBeTimestamped() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = Stock("description", "code", ALICE.party)
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
@@ -101,7 +101,7 @@ class OrderEndTests {
     @Test
     fun doesNotHaveToBeExpired() {
         val expiry = Instant.now().minusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, true)
+        val stock = Stock("description", "code", ALICE.party, listed = true)
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
@@ -122,7 +122,7 @@ class OrderEndTests {
     @Test
     fun sellerAndBuyerMustSign() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, true)
+        val stock = Stock("description", "code", ALICE.party, listed = true)
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
@@ -153,7 +153,7 @@ class OrderEndTests {
     @Test
     fun onlyOneStock() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, false)
+        val stock = Stock("description", "code", ALICE.party)
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, BOB.party
@@ -186,7 +186,7 @@ class OrderEndTests {
     @Test
     fun ifNoBuyerOnlyOwnerMustSign() {
         val expiry = Instant.now().plusSeconds(3600)
-        val stock = Stock(UniqueIdentifier(), "Amazon AMZN 10 units for £10", ALICE.party, true)
+        val stock = Stock("description", "code", ALICE.party, listed = true)
         val order = Order(
             UniqueIdentifier(), stock.linearId, stock.description, 10.POUNDS, 10,
             Direction.SELL, expiry, ALICE.party, null
