@@ -48,6 +48,10 @@ class StockContract : Contract {
             }
         }
 
+        /**
+         *
+         */
+
         class Transfer : TypeOnlyCommandData(), Commands {
             override fun verifyCommand(tx: LedgerTransaction, signers: Set<PublicKey>) {
                 requireThat {

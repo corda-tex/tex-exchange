@@ -13,15 +13,22 @@ import net.corda.core.identity.Party
  * @param owner The Party who owns the  item.
  * @param listed Whether or not the  item is listed in an active sale.
  * @param linearId Unique identifier of a StockState object.
+ *
+ * TODO Should create OwnedStock from Stock, Stock data is agnostic from ownership data
+ *
+ * OwnedStock
+ *   Stock - Static Data
+ *   Count - Trading Data
+ *   Owner - Trading Data
  */
 @BelongsToContract(StockContract::class)
-data class Stock
-    (
-    override val linearId: UniqueIdentifier = UniqueIdentifier(),
-    val description: String,
-    val owner: Party,
-    val listed: Boolean = false
-) : LinearState {
+data class Stock(val description: String,
+                 val code: String,
+                 val owner: Party,
+                 val count: Int = 1,
+                 val listed: Boolean = false,
+                 override val linearId: UniqueIdentifier = UniqueIdentifier()) : LinearState {
+
     override val participants: List<AbstractParty> get() = listOf(owner)
 
     /**
@@ -34,16 +41,15 @@ data class Stock
     /**
      * Returns a copy of this Stock which has a new owner and is not listed.
      */
-    fun transfer(newOwner: Party): Stock {
-        return copy(owner = newOwner, listed = false)
+    fun transfer(newOwner: Party, count: Int): Stock {
+        return copy(owner = newOwner, count = count, listed = false)
     }
 
     /**
      * Returns a copy of this Stock which is not listed.
      */
-    fun delist(): Stock {
+    fun deList(): Stock {
         return copy(listed = false)
     }
-
 
 }

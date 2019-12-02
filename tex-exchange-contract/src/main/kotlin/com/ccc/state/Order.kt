@@ -13,9 +13,14 @@ import java.util.*
 @CordaSerializable
 enum class Direction { SELL }
 
+@CordaSerializable
+enum class OrderStatus { OPEN, ACCEPTED, SETTLED, CANCELLED }
+
+
 @BelongsToContract(OrderContract::class)
 data class Order(
     override val linearId: UniqueIdentifier = UniqueIdentifier(),
+    val businessId :  String,
     val stockLinearId: UniqueIdentifier, //TODO: Is it possible ReferenceState ?
     val stockDescription: String,
     val price: Amount<Currency>, //TODO: To check with the team - Have two amounts - price and recievedAmount
@@ -23,7 +28,8 @@ data class Order(
     val direction: Direction,
     val expiryDateTime: Instant,
     val seller: Party,
-    val buyer: Party?
+    val buyer: Party?,
+    val orderStatus : OrderStatus = OrderStatus.OPEN
 ) : LinearState {
     override val participants: List<Party> get() = listOfNotNull(seller, buyer)
 

@@ -48,6 +48,7 @@ class OrderTests {
     fun sellerIsParticipant() {
         val order = Order(
             UniqueIdentifier(),
+            "Order001",
             UniqueIdentifier(),
             "AMZN 10 units £100",
             10.POUNDS,
@@ -64,6 +65,7 @@ class OrderTests {
     fun buyerIsParticipantIfNotNull() {
         var order = Order(
             UniqueIdentifier(),
+            "Order001",
             UniqueIdentifier(),
             "AMZN 10 units £100",
             10.POUNDS,
@@ -77,6 +79,7 @@ class OrderTests {
 
         order = Order(
             UniqueIdentifier(),
+            "Order001",
             UniqueIdentifier(),
             "AMZN 10 units £100",
             10.POUNDS,
@@ -130,6 +133,7 @@ class OrderTests {
     fun checkBuyMethod() {
         val order = Order(
             UniqueIdentifier(),
+            "Order001",
             UniqueIdentifier(),
             "AMZN 10 units £100",
             10.POUNDS,
