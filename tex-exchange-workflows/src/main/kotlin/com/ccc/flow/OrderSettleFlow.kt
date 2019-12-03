@@ -23,7 +23,7 @@ import net.corda.core.utilities.ProgressTracker
 
 @InitiatingFlow
 @StartableByRPC
-class OrderSettleFlow(val orderID: UniqueIdentifier) : FlowLogic<SignedTransaction>() {
+class OrderSettleFlow(val orderID: UniqueIdentifier, val count: Int) : FlowLogic<SignedTransaction>() {
     override val progressTracker = ProgressTracker()
 
     @Suspendable
@@ -37,9 +37,9 @@ class OrderSettleFlow(val orderID: UniqueIdentifier) : FlowLogic<SignedTransacti
         val stockStateAndRef =
             requireNotNull(stockStatesPages.states.find { it.state.data.linearId == order.stockLinearId })
         val inputStock = stockStateAndRef.state.data
-        val outputStock = inputStock.transfer(order.buyer!!,1)
+        val outputStock = inputStock.transfer(order.buyer!!, count)
         //Create a Command to transfer the Stock
-        val stockTransferSigners = outputStock.participants.map { it.owningKey } + order.buyer!!.owningKey
+        val stockTransferSigners = listOf(outputStock.owner.owningKey, inputStock.owner.owningKey)
         val stockTransferCommand = Command(StockContract.Commands.Transfer(), stockTransferSigners )
         //Create a Command to settle the Order
         val orderSettleCommand = Command(OrderContract.Commands.Settle(), order.participants.map { it.owningKey })
@@ -53,6 +53,7 @@ class OrderSettleFlow(val orderID: UniqueIdentifier) : FlowLogic<SignedTransacti
             .addCommand(orderSettleCommand)
             .addOutputState(outputStock)
             .setTimeWindow(TimeWindow.fromOnly(serviceHub.clock.instant()))
+        txBuilder.verify(serviceHub)
         //Self sign initialTx of the txBuilder
         val signInitialTx = serviceHub.signInitialTransaction(txBuilder)
         //Create a list of everyOneElse except self
@@ -70,10 +71,9 @@ class OrderSettleFlow(val orderID: UniqueIdentifier) : FlowLogic<SignedTransacti
         }
 }
 
-
-
 @InitiatedBy(OrderSettleFlow::class)
 class OrderSettleFlowResponder(val flowSession: FlowSession) : FlowLogic<Unit>() {
+    @Suspendable
     override fun call() {
         val signedTransactionFlow = object : SignTransactionFlow(flowSession) {
             override fun checkTransaction(stx: SignedTransaction) {
