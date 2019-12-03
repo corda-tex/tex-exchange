@@ -57,12 +57,13 @@ class OrderBuyFlow(val orderID: UniqueIdentifier, val amount: Amount<Currency>) 
         val signedByAllTx = subFlow(CollectSignaturesFlow(signedInitialTx, flowSessions))
         //return signedByAllTx
         // Finality Flow with the above mentioned people
-        return subFlow(FinalityFlow(signedByAllTx, everyOneElse.toMutableSet()))
+        return subFlow(FinalityFlow(signedByAllTx, flowSessions))
     }
 }
 
 @InitiatedBy(OrderBuyFlow::class)
 class OrderBuyFlowResponder(val flowSession: FlowSession) : FlowLogic<Unit>() {
+    @Suspendable
     override fun call() {
         val signedTransactionFlow = object : SignTransactionFlow(flowSession) {
             override fun checkTransaction(stx: SignedTransaction) = requireThat {
