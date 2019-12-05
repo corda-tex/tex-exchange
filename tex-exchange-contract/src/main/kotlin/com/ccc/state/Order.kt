@@ -37,6 +37,6 @@ data class Order(
      * Returns a copy the order state with a new buying party.
      */
     fun buy(amount: Amount<Currency>, buyer: Party): Order {
-        return this.copy(price = amount, buyer = buyer)
+        return copy(price = amount, buyer = buyer)
     }
 }

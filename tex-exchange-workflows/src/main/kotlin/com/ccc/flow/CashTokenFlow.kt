@@ -22,7 +22,7 @@ import java.math.RoundingMode
 object CashTokenFlow {
 
     @StartableByRPC
-    class IssueCashTokenFlow(private val quantity: Double): FlowLogic<SignedTransaction>() {
+    class IssueCashTokenFlow(private val quantity: BigDecimal): FlowLogic<SignedTransaction>() {
         @Suspendable
         @Throws(FlowException::class)
         override fun call(): SignedTransaction {
@@ -39,7 +39,7 @@ object CashTokenFlow {
     }
 
     @StartableByRPC
-    class MoveCashTokenFlow(private val quantity: Double, private val recipient: Party): FlowLogic<SignedTransaction>() {
+    class MoveCashTokenFlow(private val quantity: BigDecimal, private val recipient: Party): FlowLogic<SignedTransaction>() {
         @Suspendable
         @Throws(FlowException::class)
         override fun call(): SignedTransaction {

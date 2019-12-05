@@ -9,13 +9,13 @@ import net.corda.core.utilities.ProgressTracker
 
 class BroadcastTransactionFlow(
     private val stx: SignedTransaction,
-    private val recepients: List<Party>
+    private val recipients: List<Party>
 ) : FlowLogic<Unit>() {
     override val progressTracker = ProgressTracker()
 
     @Suspendable
     override fun call() {
-        val partyIterator = recepients.iterator()
+        val partyIterator = recipients.iterator()
         while (partyIterator.hasNext()) {
             val party = partyIterator.next()
             val otherSideSession = initiateFlow(party)
