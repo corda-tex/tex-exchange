@@ -22,7 +22,6 @@ import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.driver.*
 import net.corda.testing.node.TestCordapp
-import org.junit.Ignore
 import org.junit.Test
 import java.time.Instant
 import java.util.concurrent.Future
@@ -35,12 +34,14 @@ class DriverBasedTest {
 
     private val brokerAParameters = NodeParameters(
         providedName = CordaX500Name("BrokerA", "London", "GB"),
-        additionalCordapps = listOf()
+        additionalCordapps = listOf(),
+        startInSameProcess = true
     )
 
     private val brokerBParameters = NodeParameters(
         providedName = CordaX500Name("BrokerB", "London", "GB"),
-        additionalCordapps = listOf()
+        additionalCordapps = listOf(),
+        startInSameProcess = true
     )
 
     private val nodeParams = listOf(brokerAParameters, brokerBParameters)
@@ -53,7 +54,7 @@ class DriverBasedTest {
         TestCordapp.findCordapp("com.ccc.contract")
     )
     private val driverParameters = DriverParameters(
-        startNodesInProcess = false,
+        startNodesInProcess = true,
         cordappsForAllNodes = defaultCorDapps,
         networkParameters = testNetworkParameters(notaries = emptyList(), minimumPlatformVersion = 4)
     )
@@ -84,12 +85,11 @@ class DriverBasedTest {
             log.info("All nodes started up.")
 
             log.info("Creating one Stock on node A.")
-            val stockIdentity =
-                A.rpc.startFlow(::SelfIssueStockFlow, "Google GOOGL 10 units").returnValue.getOrThrow()
+            val stockIdentity = A.rpc.startFlow(::SelfIssueStockFlow, "stockDescription", "code", 1).returnValue.getOrThrow()
 
             // Check that A recorded all the new accounts.
             val aStock = A.rpc.vaultQuery(Stock::class.java).states.single().state.data
-            assertEquals(aStock.description, "Google GOOGL 10 units")
+            assertEquals(aStock.description, "stockDescription")
             assertEquals(stockIdentity, aStock.linearId)
 
             log.info("Create an Order and List it to parties")
@@ -107,29 +107,22 @@ class DriverBasedTest {
     fun `OrderBuyFlow should transfer the order to counterparty`() {
         driver(driverParameters) {
             val (A, B) = nodeParams.map { params -> startNode(params) }.transpose().getOrThrow()
-            log.info("All nodes started up.")
 
-            log.info("Creating one Stock on node A.")
-            val stockIdentity =
-                A.rpc.startFlow(::SelfIssueStockFlow, "Google GOOGL 10 units").returnValue.getOrThrow()
+            // Creating stock on node A.
+            val stockId = A.rpc.startFlow(::SelfIssueStockFlow, "stockDescription", "code", 1).returnValue.getOrThrow()
 
-            // Check that A recorded all the new accounts.
+            // Check that A recorded the stock.
             val aStock = A.rpc.vaultQuery(Stock::class.java).states.single().state.data
-            assertEquals(aStock.description, "Google GOOGL 10 units")
-            assertEquals(stockIdentity, aStock.linearId)
+            assertEquals(aStock.description, "stockDescription")
+            assertEquals(stockId, aStock.linearId)
 
-            log.info("Create an Order and List it to parties")
-            val signedTransactionListOrder =
-                A.rpc.startFlow(::OrderListFlow, stockIdentity, 10.POUNDS, 10, Instant.now().plusSeconds(200))
-                    .returnValue.getOrThrow()
-            log.info("Test Complete")
+            // Create an order and list it to parties.
+            A.rpc.startFlow(::OrderListFlow, stockId, 10.POUNDS, 10, Instant.now().plusSeconds(2000000)).returnValue.getOrThrow()
             Thread.sleep(3000)
             val listedOrder = B.rpc.vaultQuery(Order::class.java).states.single().state.data
 
-            log.info("Counterparty Buys Order")
-            val signedTransactionBuyOrder =
-                B.rpc.startFlow(::OrderBuyFlow, listedOrder.linearId, 10.POUNDS)
-                    .returnValue.getOrThrow()
+            // B buys order.
+            B.rpc.startFlow(::OrderBuyFlow, listedOrder.linearId, 10.POUNDS).returnValue.getOrThrow()
             Thread.sleep(3000)
             val boughtOrder = B.rpc.vaultQuery(Order::class.java).states.single().state.data
 
@@ -138,37 +131,31 @@ class DriverBasedTest {
     }
 
     //TODO: TO solve this defect - The contract verification fails
-    @Ignore
+    @Test
     fun `OrderSettleFlow should transfer the stock to counterparty`() {
         driver(driverParameters) {
+            // Start nodes.
             val (A, B) = nodeParams.map { params -> startNode(params) }.transpose().getOrThrow()
-            log.info("All nodes started up.")
 
-            log.info("Creating one Stock on node A.")
-            val stockIdentity =
-                A.rpc.startFlow(::SelfIssueStockFlow, "Google GOOGL 10 units").returnValue.getOrThrow()
+            // A issues stock.
+            val stockIdentity = A.rpc.startFlow(::SelfIssueStockFlow, "stockDescription", "code", 1).returnValue.getOrThrow()
 
-            // Check that A recorded all the new accounts.
+            // Check stock is issued on A.
             val aStock = A.rpc.vaultQuery(Stock::class.java).states.single().state.data
-            assertEquals(aStock.description, "Google GOOGL 10 units")
+            assertEquals(aStock.description, "stockDescription")
             assertEquals(stockIdentity, aStock.linearId)
 
-            log.info("Create an Order and List it to parties")
-            val signedTransactionListOrder =
-                A.rpc.startFlow(::OrderListFlow, stockIdentity, 10.POUNDS, 10, Instant.now().plusSeconds(200))
-                    .returnValue.getOrThrow()
-            log.info("Test Complete")
+            // Create an order and list it to parties.
+            A.rpc.startFlow(::OrderListFlow, stockIdentity, 10.POUNDS, 10, Instant.now().plusSeconds(200)).returnValue.getOrThrow()
             Thread.sleep(3000)
             val listedOrder = B.rpc.vaultQuery(Order::class.java).states.single().state.data
 
             log.info("Counterparty Buys Order")
-            val signedTransactionBuyOrder =
-                B.rpc.startFlow(::OrderBuyFlow, listedOrder.linearId, 10.POUNDS)
-                    .returnValue.getOrThrow()
+            B.rpc.startFlow(::OrderBuyFlow, listedOrder.linearId, 10.POUNDS).returnValue.getOrThrow()
             Thread.sleep(3000)
             val boughtOrder = B.rpc.vaultQuery(Order::class.java).states.single().state.data
 
-            log.info("Party Settles Order")
+            // Party settles order.
             val signedTransactionSettleOrder =
                 A.rpc.startFlow(::OrderSettleFlow, listedOrder.linearId)
                     .returnValue.getOrThrow()
