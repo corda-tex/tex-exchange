@@ -13,6 +13,7 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.utilities.ProgressTracker
 
 object StockTokenFlow {
 
@@ -21,11 +22,14 @@ object StockTokenFlow {
      */
     @StartableByRPC
     class SelfIssueStockTokenFlow(private val ticker: String, private val quantity: Int) : FlowLogic<SignedTransaction>() {
+
+        override val progressTracker = ProgressTracker()
+
         @Suspendable
         @Throws(FlowException::class)
         override fun call(): SignedTransaction {
             // grab the notary
-            val notary = serviceHub.networkMapCache.notaryIdentities.first()
+          //  val notary = serviceHub.networkMapCache.notaryIdentities.first()
 
             // create token type
             val stockTokenType = StockTokenType(ticker, 0)
@@ -49,6 +53,9 @@ object StockTokenFlow {
      */
     @StartableByRPC
     class MoveStockTokenFlow(private val ticker: String, private val quantity: Int, private val recipient: Party) : FlowLogic<SignedTransaction>() {
+
+        override val progressTracker = ProgressTracker()
+
         @Suspendable
         @Throws(FlowException::class)
         override fun call(): SignedTransaction {

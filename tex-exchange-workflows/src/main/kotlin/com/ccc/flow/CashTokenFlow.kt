@@ -16,6 +16,7 @@ import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.utilities.ProgressTracker
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -23,6 +24,9 @@ object CashTokenFlow {
 
     @StartableByRPC
     class IssueCashTokenFlow(private val quantity: BigDecimal): FlowLogic<SignedTransaction>() {
+
+        override val progressTracker = ProgressTracker()
+
         @Suspendable
         @Throws(FlowException::class)
         override fun call(): SignedTransaction {
@@ -40,6 +44,9 @@ object CashTokenFlow {
 
     @StartableByRPC
     class MoveCashTokenFlow(private val quantity: BigDecimal, private val recipient: Party): FlowLogic<SignedTransaction>() {
+
+        override val progressTracker = ProgressTracker()
+
         @Suspendable
         @Throws(FlowException::class)
         override fun call(): SignedTransaction {
