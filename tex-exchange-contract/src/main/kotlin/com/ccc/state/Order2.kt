@@ -6,8 +6,13 @@ import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
+import net.corda.core.serialization.CordaSerializable
 import java.math.BigDecimal
 import java.time.Instant
+
+
+@CordaSerializable
+enum class OrderStatus2 { OPEN, ACCEPTED, SETTLED, CANCELLED }
 
 @BelongsToContract(OrderContract2::class)
 data class Order2(
@@ -18,7 +23,8 @@ data class Order2(
     val direction: Direction,
     val expires: Instant,
     val seller: Party,
-    val buyers: Set<Party> = mutableSetOf()
+    val buyers: Set<Party> = mutableSetOf(),
+    val orderStatus : OrderStatus2 = OrderStatus2.OPEN
 ) : LinearState {
     override val participants: List<AbstractParty> get() = buyers.plus(seller).toList()
 }
