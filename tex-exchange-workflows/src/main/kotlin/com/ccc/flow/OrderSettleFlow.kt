@@ -74,6 +74,7 @@ class OrderSettleFlow(val orderID: UniqueIdentifier) : FlowLogic<SignedTransacti
 
 @InitiatedBy(OrderSettleFlow::class)
 class OrderSettleFlowResponder(val flowSession: FlowSession) : FlowLogic<Unit>() {
+    @Suspendable
     override fun call() {
         val signedTransactionFlow = object : SignTransactionFlow(flowSession) {
             override fun checkTransaction(stx: SignedTransaction) {

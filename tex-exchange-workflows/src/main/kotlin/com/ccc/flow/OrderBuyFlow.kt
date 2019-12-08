@@ -12,6 +12,8 @@ import net.corda.core.flows.*
 import net.corda.core.node.StatesToRecord
 import java.util.*
 
+// TODO: kyriakos: as is, this flow should be renamed to ReserveStockFlow(?)
+
 /**
  * This flow is to Buy the Stock
  * The Buyer initiates the flow
@@ -29,7 +31,7 @@ class OrderBuyFlow(val orderID: UniqueIdentifier, val amount: Amount<Currency>) 
         val orderStateAndRef = requireNotNull(orderStates.states.find { it.state.data.linearId == orderID })
         val inputOrder = orderStateAndRef.state.data
         //Create an OrderOutput with current node's id as  a Buyer
-        val outputOrder = inputOrder.buy(amount, ourIdentity)
+        val outputOrder = inputOrder.buy(amount, ourIdentity) //TODO: kyriakos: why copy the price, the price is already there.
         //Create a txBuilder
           // input stateAndref of the order
           // StateAndContract of the order that has the following:
@@ -57,12 +59,13 @@ class OrderBuyFlow(val orderID: UniqueIdentifier, val amount: Amount<Currency>) 
         val signedByAllTx = subFlow(CollectSignaturesFlow(signedInitialTx, flowSessions))
         //return signedByAllTx
         // Finality Flow with the above mentioned people
-        return subFlow(FinalityFlow(signedByAllTx, everyOneElse.toMutableSet()))
+        return subFlow(FinalityFlow(signedByAllTx, flowSessions))
     }
 }
 
 @InitiatedBy(OrderBuyFlow::class)
 class OrderBuyFlowResponder(val flowSession: FlowSession) : FlowLogic<Unit>() {
+    @Suspendable
     override fun call() {
         val signedTransactionFlow = object : SignTransactionFlow(flowSession) {
             override fun checkTransaction(stx: SignedTransaction) = requireThat {
