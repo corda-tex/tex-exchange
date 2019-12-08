@@ -61,7 +61,7 @@ class OrderListFlowTests {
     @Test
     fun `OrderListFlow publishes and sends to counter party`() {
         // Issue stock and assert it exists in seller's vault.
-        val issuedStockId = sellerNode.startFlow(SelfIssueStockFlow("IBM ", "IBM", 1)).get()
+        val issuedStockId = sellerNode.startFlow(SelfIssue.SelfIssueStockFlow("IBM ", "IBM", 1)).get()
         val stock = sellerNode.services.vaultService.queryBy(Stock::class.java).states[0].state.data
         assert(issuedStockId == stock.linearId)
 
@@ -76,7 +76,7 @@ class OrderListFlowTests {
     @Test
     fun `OrderListFlow publishes and broadcasts to counter parties`() {
         // Issue stock and assert it exists in seller's vault.
-        val issuedStockId = sellerNode.startFlow(SelfIssueStockFlow("IBM ", "IBM", 1)).get()
+        val issuedStockId = sellerNode.startFlow(SelfIssue.SelfIssueStockFlow("IBM ", "IBM", 1)).get()
         val stock = sellerNode.services.vaultService.queryBy(Stock::class.java).states[0].state.data
         assert(issuedStockId == stock.linearId)
 
