@@ -1,11 +1,10 @@
 package com.ccc.flow
 
 
+import com.ccc.state.Stock
 import net.corda.core.identity.CordaX500Name
-import net.corda.core.identity.Party
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkParameters
-import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.TestCordapp
 import org.junit.After
 import org.junit.Before
