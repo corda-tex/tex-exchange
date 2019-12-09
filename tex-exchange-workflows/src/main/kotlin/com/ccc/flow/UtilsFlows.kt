@@ -25,7 +25,7 @@ object UtilsFlows {
             val me = ourIdentity
             val cashStates = serviceHub.vaultService.queryBy(Cash.State::class.java).states
             if (cashStates.isEmpty()) {
-                log.info("No cash states found to merge!")
+                log.info("There are no cash states in my vault to merge!")
                 return
             }
 
