@@ -6,7 +6,6 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.contextLogger
-import net.corda.finance.GBP
 import net.corda.finance.contracts.asset.Cash
 import net.corda.finance.flows.AbstractCashFlow
 
@@ -38,24 +37,26 @@ object UtilsFlows {
             }
             txBuilder.addOutputState(Cash.State(cashSum, me))
             txBuilder.addCommand(Cash.Commands.Move(), me.owningKey)
+            txBuilder.verify(serviceHub)
+
             val stx = serviceHub.signInitialTransaction(txBuilder)
             finaliseTx(stx, emptySet(), "Unable to notarise issue").tx.outputsOfType(Cash.State::class.java).single()
         }
     }
 
     // 1. Split Cash : 1 cash state -> 2 cash states -> return the cash state we requested
-    class SplitAndGetCashFlow(private val units: Int, progressTracker: ProgressTracker): AbstractCashFlow<StateAndRef<Cash.State>?>(progressTracker) {
+    class SplitAndGetCashFlow(private val units: Int, progressTracker: ProgressTracker): AbstractCashFlow<Cash.State?>(progressTracker) {
         constructor(units: Int): this(units, tracker())
         @Suspendable
-        override fun call(): StateAndRef<Cash.State>? {
+        override fun call(): Cash.State? {
             // Get all Cash states and iterate through them to find one big enough to split.
             val cashStates = serviceHub.vaultService.queryBy(Cash.State::class.java).states
-            var cashStateToReturn: StateAndRef<Cash.State>? = null
+            var cashStateToReturn: Cash.State? = null
             for (cashState in cashStates) {
                 if (cashState.state.data.amount.toDecimal().setScale(0) == units.toBigDecimal()) { // no need to split it, just return this one.
-                    cashStateToReturn = cashState
+                    cashStateToReturn = cashState.state.data
                 } else if (cashState.state.data.amount.toDecimal().setScale(0) > units.toBigDecimal()) { // do splitting.
-                    //cashStateToReturn = doSplitting(cashState, units)
+                    cashStateToReturn = splitAndGetCash(cashState, units)
                 } else {
                     // Maybe a Merge would help here
 
@@ -66,11 +67,26 @@ object UtilsFlows {
         }
 
         // Split and return the Cash.State we want to use.
-//        private fun doSplitting(cashState: StateAndRef<Cash.State>, units: Int): StateAndRef<Cash.State> {
-//            val me = ourIdentity
-//
-//
-//        }
+        @Suspendable
+        private fun splitAndGetCash(cashState: StateAndRef<Cash.State>, units: Int): Cash.State {
+            val me = ourIdentity
+            val token = cashState.state.data.amount.token
+            val initialAmount =  cashState.state.data.amount
+            val unitsAmount = Amount.fromDecimal(units.toBigDecimal(), token)
+            val unitsCashState = Cash.State(unitsAmount, me)
+            val complementaryCashState = Cash.State(initialAmount - unitsAmount, me)
+
+            val txBuilder = TransactionBuilder(notary = serviceHub.networkMapCache.notaryIdentities.first())
+            txBuilder.addInputState(cashState)
+            txBuilder.addOutputState(unitsCashState)
+            txBuilder.addOutputState(complementaryCashState)
+            txBuilder.addCommand(Cash.Commands.Move(), me.owningKey)
+            txBuilder.verify(serviceHub)
+
+            val stx = serviceHub.signInitialTransaction(txBuilder)
+            val ftx =  finaliseTx(stx, emptySet(), "Unable to notarise issue")
+            return ftx.tx.outputsOfType(Cash.State::class.java).apply { assert(size == 2) }[0] // careful to always put unitsCashState first in txBuilder.
+        }
 
     }
 }

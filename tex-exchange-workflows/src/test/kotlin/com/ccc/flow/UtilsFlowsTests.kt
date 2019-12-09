@@ -67,11 +67,28 @@ class UtilsFlowsTests {
         // WORK HERE
         val cashUnits: Int = 10
         selfIssueCash(aNode, cashUnits)
-        // Split that and get a cash(3). Check that in vault exists a cash(3) and a cash(7)
         val flow = UtilsFlows.SplitAndGetCashFlow(10)
         val future = aNode.startFlow(flow) // no need to run the network for this one. Notary takes no place here.
         val existingCashState = future.get()
         assertNotNull(existingCashState)
     }
+
+    @Test
+    fun `SplitCashFlow does splitting and returns the requested cash`() {
+        // Split that and get a cash(3). Check that in vault exists a cash(3) and a cash(7)
+        val cashUnits: Int = 10
+        selfIssueCash(aNode, cashUnits)
+        val flow = UtilsFlows.SplitAndGetCashFlow(3)
+        val future = aNode.startFlow(flow)
+        network.runNetwork()
+        val returnedCashState = future.get()
+        // Check returned cash state.
+        assertEquals(3.toBigDecimal(), returnedCashState?.amount?.toDecimal()?.setScale(0))
+        // Check correct outcome of splitting.
+        assertEquals(3.toBigDecimal(), aNode.services.vaultService.queryBy(Cash.State::class.java).states[0].state.data.amount.toDecimal()?.setScale(0))
+        assertEquals(7.toBigDecimal(), aNode.services.vaultService.queryBy(Cash.State::class.java).states[1].state.data.amount.toDecimal()?.setScale(0))
+    }
+
+
 
 }
