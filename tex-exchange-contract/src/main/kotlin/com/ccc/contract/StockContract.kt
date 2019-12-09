@@ -62,10 +62,10 @@ class StockContract : Contract {
                     "The 'owner' property must change" using (outputStock.owner != inputStock.owner)
                     "The 'listed' property must change" using (outputStock.listed != inputStock.listed)
                     "The 'listed' property must be 'false'" using (!outputStock.listed)
-                    "The previous and new owner only must sign a transfer transaction" using (signers == setOf(
-                        outputStock.owner.owningKey,
-                        inputStock.owner.owningKey
-                    ))
+//                    "The previous and new owner only must sign a transfer transaction" using (signers == setOf(
+//                        outputStock.owner.owningKey,
+//                        inputStock.owner.owningKey
+//                    ))
                 }
             }
         }

@@ -30,11 +30,11 @@ class SelfIssueTests {
 
     @Test
     fun `SelfIssueStockFlow issues stock`() {
-        val flow = SelfIssue.SelfIssueStockFlow("IBM ", "IBM", 1)
+        val flow = SelfIssue.SelfIssueStockFlow("IBM",1)
         val stockId = issueNode.startFlow(flow).get() // Future#get waits for the flow to be completed.
         val stock = issueNode.services.vaultService.queryBy(Stock::class.java).states[0].state.data
-        assertEquals(stock.code, "IBM")
-        assertEquals(stock.linearId, stockId)
+        assertEquals(stock.description, "IBM")
+        assertEquals(stock.uniqueId, stockId)
     }
 
     @Test
