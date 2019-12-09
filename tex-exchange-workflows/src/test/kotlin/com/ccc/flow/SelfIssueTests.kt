@@ -50,7 +50,7 @@ class SelfIssueTests {
         selfIssueCash(cashUnits)
         selfIssueCash(cashUnits)
         // Lets merge Cash now.
-        val flow = SelfIssue.MergeCashFlow()
+        val flow = UtilsFlows.MergeCashFlow()
         val future = issueNode.startFlow(flow)
         network.runNetwork()
         future.get()
@@ -60,7 +60,7 @@ class SelfIssueTests {
 
     @Test
     fun `MergeCashFlow with no input states`() {
-        val flow = SelfIssue.MergeCashFlow()
+        val flow = UtilsFlows.MergeCashFlow()
         issueNode.startFlow(flow).get()
     }
 
