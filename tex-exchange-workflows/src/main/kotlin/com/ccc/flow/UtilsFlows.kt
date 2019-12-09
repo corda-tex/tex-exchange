@@ -44,10 +44,10 @@ object UtilsFlows {
     }
 
     // 1. Split Cash : 1 cash state -> 2 cash states -> return the cash state we requested
-    class SplitAndGetCashFlow(private val units: Int, progressTracker: ProgressTracker): AbstractCashFlow<Unit>(progressTracker) {
+    class SplitAndGetCashFlow(private val units: Int, progressTracker: ProgressTracker): AbstractCashFlow<StateAndRef<Cash.State>?>(progressTracker) {
         constructor(units: Int): this(units, tracker())
         @Suspendable
-        override fun call() {
+        override fun call(): StateAndRef<Cash.State>? {
             // Get all Cash states and iterate through them to find one big enough to split.
             val cashStates = serviceHub.vaultService.queryBy(Cash.State::class.java).states
             var cashStateToReturn: StateAndRef<Cash.State>? = null
@@ -60,7 +60,9 @@ object UtilsFlows {
                     // Maybe a Merge would help here
 
                 }
+
             }
+            return cashStateToReturn
         }
 
         // Split and return the Cash.State we want to use.
