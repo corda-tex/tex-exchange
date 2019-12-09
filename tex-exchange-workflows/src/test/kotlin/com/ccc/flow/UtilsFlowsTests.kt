@@ -105,7 +105,7 @@ class UtilsFlowsTests {
 
     @Test
     fun `SplitCashFlow does merging and returns the requested cash - Requested cash does not exist in vault`() {
-        // Add cash: 1, 2 ,3 ask for 6. It should merge 1+2+3 = 6 and return that.
+        // Add cash: 1, 2 ,3 ask for more (e.g. 7). We don't have that much in vault. Return nothing.
         selfIssueCash(aNode, 1)
         selfIssueCash(aNode, 2)
         selfIssueCash(aNode, 3)
