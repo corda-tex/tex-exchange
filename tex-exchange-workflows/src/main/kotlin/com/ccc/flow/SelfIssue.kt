@@ -38,22 +38,14 @@ object SelfIssue {
 
         @Suspendable
         override fun call(): UniqueIdentifier {
-            //Create a Stock State with the invoker's identity
-            val stock = Stock(description, code, owner = ourIdentity, count = count)
-            //Create an Issue Stock Command with the invoker's key as the signer
+            val stock = Stock(description, code, owner = ourIdentity, count = count) //Create a Stock State with the invoker's identity
             val command = Command(StockContract.Commands.Issue(), listOf(ourIdentity.owningKey))
-            //Use a txBuilder to build a transaction of the Stock and Issue Command
             //TO REMEMBER : When we use the Cordite's notary, the following line has to be altered to reflect that. We may use Cordite's notary for metering
             val txBuilder = TransactionBuilder(notary = serviceHub.networkMapCache.notaryIdentities.first())
             txBuilder.withItems(StateAndContract(stock, STOCK_CONTRACT_REF), command)
-            //Get the tx verified using the Issue command
             txBuilder.verify(serviceHub)
-            //Sign the tx
             val stx = serviceHub.signInitialTransaction(txBuilder)
-            //FinalityFlow - let it complete and get the output stock
-            subFlow(FinalityFlow(stx, emptyList())).tx.outputsOfType(Stock::class.java).single()
-            //Return the stock's unique ID
-            return stock.linearId
+            return subFlow(FinalityFlow(stx, emptyList())).tx.outputsOfType(Stock::class.java).single().linearId
         }
     }
 
