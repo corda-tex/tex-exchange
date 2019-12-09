@@ -12,7 +12,7 @@ import net.corda.finance.flows.AbstractCashFlow
 // TODO: make the below flows generic to support both Cash and Stock
 object UtilsFlows {
 
-    class MergeCashFlow(progressTracker: ProgressTracker): AbstractCashFlow<Unit>(progressTracker) {
+    class MergeCashFlow(progressTracker: ProgressTracker): AbstractCashFlow<Boolean>(progressTracker) {
         constructor(): this(tracker())
 
         private companion object {
@@ -20,12 +20,17 @@ object UtilsFlows {
         }
 
         @Suspendable
-        override fun call() {
+        override fun call(): Boolean {
             val me = ourIdentity
             val cashStates = serviceHub.vaultService.queryBy(Cash.State::class.java).states
             if (cashStates.isEmpty()) {
-                log.info("There are no cash states in my vault to merge!")
-                return
+                log.info("There are no cash states in my vault to merge. Returning...")
+                return false
+            }
+
+            if (cashStates.size == 1) {
+                log.info("There is only one cash state. No need for merging. Returning...")
+                return false
             }
 
             val token = cashStates[0].state.data.amount.token
@@ -41,6 +46,7 @@ object UtilsFlows {
 
             val stx = serviceHub.signInitialTransaction(txBuilder)
             finaliseTx(stx, emptySet(), "Unable to notarise issue").tx.outputsOfType(Cash.State::class.java).single()
+            return true
         }
     }
 
@@ -58,11 +64,14 @@ object UtilsFlows {
                 } else if (cashState.state.data.amount.toDecimal().setScale(0) > units.toBigDecimal()) { // do splitting.
                     cashStateToReturn = splitAndGetCash(cashState, units)
                 } else {
-                    // Maybe a Merge would help here
-
                 }
-
             }
+
+            if (cashStateToReturn == null) { // merge and try again.
+                val mergeDone = subFlow(MergeCashFlow())
+                if (mergeDone) cashStateToReturn = call()
+            }
+
             return cashStateToReturn
         }
 

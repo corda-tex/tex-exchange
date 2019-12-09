@@ -11,6 +11,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class UtilsFlowsTests {
 
@@ -89,6 +90,30 @@ class UtilsFlowsTests {
         assertEquals(7.toBigDecimal(), aNode.services.vaultService.queryBy(Cash.State::class.java).states[1].state.data.amount.toDecimal()?.setScale(0))
     }
 
+    @Test
+    fun `SplitCashFlow does merging and returns the requested cash - Requested cash exists in vault`() {
+        // Add cash: 1, 2 ,3 ask for 6. It should merge 1+2+3 = 6 and return that.
+        selfIssueCash(aNode, 1)
+        selfIssueCash(aNode, 2)
+        selfIssueCash(aNode, 3)
+        val flow = UtilsFlows.SplitAndGetCashFlow(6)
+        val future = aNode.startFlow(flow)
+        network.runNetwork()
+        val returnedCashState = future.get()
+        assertEquals(6.toBigDecimal(), returnedCashState?.amount?.toDecimal()?.setScale(0))
+    }
 
+    @Test
+    fun `SplitCashFlow does merging and returns the requested cash - Requested cash does not exist in vault`() {
+        // Add cash: 1, 2 ,3 ask for 6. It should merge 1+2+3 = 6 and return that.
+        selfIssueCash(aNode, 1)
+        selfIssueCash(aNode, 2)
+        selfIssueCash(aNode, 3)
+        val flow = UtilsFlows.SplitAndGetCashFlow(7)
+        val future = aNode.startFlow(flow)
+        network.runNetwork()
+        val returnedCashState = future.get()
+        assertNull(returnedCashState)
+    }
 
 }
