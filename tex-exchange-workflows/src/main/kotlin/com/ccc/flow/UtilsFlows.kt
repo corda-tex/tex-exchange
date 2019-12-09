@@ -41,8 +41,8 @@ object UtilsFlows {
                 cashSum += cashState.state.data.amount
             }
             txBuilder.addOutputState(Cash.State(cashSum, me))
-            txBuilder.addCommand(Cash.Commands.Move(), me.owningKey)
-            txBuilder.verify(serviceHub)
+            .addCommand(Cash.Commands.Move(), me.owningKey)
+            .verify(serviceHub)
 
             val stx = serviceHub.signInitialTransaction(txBuilder)
             finaliseTx(stx, emptySet(), "Unable to notarise issue").tx.outputsOfType(Cash.State::class.java).single()
@@ -63,8 +63,7 @@ object UtilsFlows {
                     cashStateToReturn = cashState.state.data
                 } else if (cashState.state.data.amount.toDecimal().setScale(0) > units.toBigDecimal()) { // do splitting.
                     cashStateToReturn = splitAndGetCash(cashState, units)
-                } else {
-                }
+                } else { }
             }
 
             if (cashStateToReturn == null) { // merge and try again.
@@ -87,10 +86,10 @@ object UtilsFlows {
 
             val txBuilder = TransactionBuilder(notary = serviceHub.networkMapCache.notaryIdentities.first())
             txBuilder.addInputState(cashState)
-            txBuilder.addOutputState(unitsCashState)
-            txBuilder.addOutputState(complementaryCashState)
-            txBuilder.addCommand(Cash.Commands.Move(), me.owningKey)
-            txBuilder.verify(serviceHub)
+            .addOutputState(unitsCashState)
+            .addOutputState(complementaryCashState)
+            .addCommand(Cash.Commands.Move(), me.owningKey)
+            .verify(serviceHub)
 
             val stx = serviceHub.signInitialTransaction(txBuilder)
             val ftx =  finaliseTx(stx, emptySet(), "Unable to notarise issue")
