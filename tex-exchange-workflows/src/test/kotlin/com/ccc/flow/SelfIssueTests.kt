@@ -1,6 +1,7 @@
 package com.ccc.flow
 
 
+import com.ccc.flow.TestUtils.selfIssueCash
 import com.ccc.state.Stock
 import net.corda.core.identity.CordaX500Name
 import net.corda.finance.contracts.asset.Cash
@@ -39,34 +40,10 @@ class SelfIssueTests {
     @Test
     fun `SelfIssueCashFlow issues cash`() {
         val cashUnits: Int = 10
-        selfIssueCash(cashUnits)
-        val issuedCash = issueNode.services.vaultService.queryBy(Cash.State::class.java).states[0].state.data
-        assertEquals(cashUnits.toBigDecimal(), issuedCash.amount.toDecimal().setScale(0))
-    }
-
-    @Test
-    fun `SelfIssueCashFlow issues multiple cash and MergeCashFlow merges that`() {
-        val cashUnits: Int = 10
-        selfIssueCash(cashUnits)
-        selfIssueCash(cashUnits)
-        // Lets merge Cash now.
-        val flow = UtilsFlows.MergeCashFlow()
-        val future = issueNode.startFlow(flow)
-        network.runNetwork()
-        future.get()
-        val issuedCash = issueNode.services.vaultService.queryBy(Cash.State::class.java).states[0].state.data
-        assertEquals(20.toBigDecimal(), issuedCash.amount.toDecimal().setScale(0))
-    }
-
-    @Test
-    fun `MergeCashFlow with no input states`() {
-        val flow = UtilsFlows.MergeCashFlow()
-        issueNode.startFlow(flow).get()
-    }
-
-    private fun selfIssueCash(cashUnits: Int) {
         val flow = SelfIssue.SelfIssueCashFlow(cashUnits)
         issueNode.startFlow(flow).get()
+        val issuedCash = issueNode.services.vaultService.queryBy(Cash.State::class.java).states[0].state.data
+        assertEquals(cashUnits.toBigDecimal(), issuedCash.amount.toDecimal().setScale(0))
     }
 
 }
