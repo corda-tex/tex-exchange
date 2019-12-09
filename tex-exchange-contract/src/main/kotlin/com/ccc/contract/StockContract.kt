@@ -90,6 +90,19 @@ class StockContract : Contract {
                 }
             }
         }
+
+        class Merge : Commands {
+            override fun verifyCommand(tx: LedgerTransaction, signers: Set<PublicKey>) {
+                "There must only be one output state" using (tx.outputStates.size == 1)
+                val outState = tx.outputStates[0] as Stock
+                val outAmount = outState.amount
+                val token  = outAmount.token
+                var sumInAmount = Amount.zero(token)
+                tx.inputStates.forEach{ sumInAmount += (it as Stock).amount }
+                "Stock amounts before and after must be equal" using (sumInAmount == outAmount)
+            }
+
+        }
     }
 
     /**

@@ -7,6 +7,7 @@ import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import net.corda.finance.contracts.asset.Cash
 import java.lang.IllegalArgumentException
+import java.lang.IllegalStateException
 import java.security.PublicKey
 import java.util.*
 
@@ -21,19 +22,9 @@ data class Stock(val description: String,
                  override val owner: AbstractParty,
                  override val amount: Amount<Issued<StockUnit>>,
                  val listed: Boolean = false,
-                 val uniqueId: UniqueIdentifier = UniqueIdentifier()) : FungibleAsset<StockUnit> {
+                 val uniqueId: UniqueIdentifier) : FungibleAsset<StockUnit> {
 
-    companion object {
-        fun mergeStock(stockList: List<Stock>): Stock {
-            // TODO must add checks here that all other properties are same for all list elements.
-            val token = stockList[0].amount.token
-            var sumAmount = Amount.zero(token)
-            for (stock in stockList) {
-                sumAmount += stock.amount
-            }
-            return stockList[0].copy(amount = sumAmount)
-        }
-    }
+    override val participants: List<AbstractParty> get() = listOf(owner)
 
     fun split(requestedAmount: Amount<Issued<StockUnit>>): Pair<Stock, Stock> {
         if (requestedAmount.toDecimal().setScale(0) > amount.toDecimal().setScale(0)) throw IllegalArgumentException("The Requested amount is greater than mine")
@@ -43,8 +34,6 @@ data class Stock(val description: String,
     }
 
     override fun withNewOwner(newOwner: AbstractParty): CommandAndState = CommandAndState(Cash.Commands.Move(), copy(owner = newOwner))
-
-    override val participants: List<AbstractParty> get() = listOf(owner)
 
         /**
      * Returns a copy of this Stock which is listed.

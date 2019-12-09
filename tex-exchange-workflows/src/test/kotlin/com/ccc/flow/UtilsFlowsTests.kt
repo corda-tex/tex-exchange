@@ -1,6 +1,8 @@
 package com.ccc.flow
 
 import com.ccc.flow.TestUtils.selfIssueCash
+import com.ccc.flow.TestUtils.selfIssueStock
+import com.ccc.state.Stock
 import net.corda.core.identity.CordaX500Name
 import net.corda.finance.contracts.asset.Cash
 import net.corda.testing.node.MockNetwork
@@ -41,7 +43,18 @@ class UtilsFlowsTests {
 
     @Test
     fun `MergeStockFlow merges` () {
+        val stockId = selfIssueStock(aNode, null, "potatoes", 10)
+        selfIssueStock(aNode, stockId, "potatoes", 10)
 
+        var stockStates = aNode.services.vaultService.queryBy(Stock::class.java).states
+        assertEquals(2, stockStates.size)
+
+        val flow = UtilsFlows.MergeStockFlow(stockId)
+        val future = aNode.startFlow(flow)
+        network.runNetwork()
+        future.get()
+        stockStates = aNode.services.vaultService.queryBy(Stock::class.java).states
+        assertEquals(1, stockStates.size)
     }
 
     @Test

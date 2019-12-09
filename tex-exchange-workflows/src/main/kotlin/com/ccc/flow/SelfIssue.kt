@@ -24,6 +24,7 @@ object SelfIssue {
 
     @StartableByRPC
     class SelfIssueStockFlow(
+        private val stockId: UniqueIdentifier? = null,
         val description: String,
         private val quantity: Long
     ) : FlowLogic<UniqueIdentifier>() {
@@ -36,7 +37,7 @@ object SelfIssue {
             val me = ourIdentity.ref(issueRef)
             val token = Issued(me, StockUnit)
             val zeroAmount = Amount.zero(token)
-            val stock = Stock(description, ourIdentity, zeroAmount.copy(quantity = quantity))
+            val stock = Stock(description, ourIdentity, zeroAmount.copy(quantity = quantity), uniqueId = stockId?: UniqueIdentifier()) // @uniqueId: existing or new stock
 
             val command = Command(StockContract.Commands.Issue(), listOf(ourIdentity.owningKey))
             //TO REMEMBER : When we use the Cordite's notary, the following line has to be altered to reflect that. We may use Cordite's notary for metering
