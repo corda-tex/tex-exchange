@@ -72,8 +72,26 @@ class UtilsFlowsTests {
     }
 
     @Test
-    fun `SplitStockFlow splits` () {
+    fun `GetStockFlow gets stock - We have sufficient stock` () {
+        val stockId = selfIssueStock(aNode, null, "potatoes", 5)
+        selfIssueStock(aNode, stockId, "potatoes", 6)
+        val flow = UtilsFlows.GetStockFlow(stockId, 11)
+        val future = aNode.startFlow(flow)
+        network.runNetwork()
+        val retStock = future.get()
+        assertEquals(11.toBigDecimal(), retStock?.state?.data?.amount?.toDecimal()?.setScale(0))
+    }
 
+    @Test
+    fun `GetStockFlow gets stock - We don't have sufficient stock` () {
+        val stockId = selfIssueStock(aNode, null, "potatoes", 1)
+        selfIssueStock(aNode, stockId, "potatoes", 2)
+        selfIssueStock(aNode, stockId, "potatoes", 3)
+        val flow = UtilsFlows.GetStockFlow(stockId, 7)
+        val future = aNode.startFlow(flow)
+        network.runNetwork()
+        val retStock = future.get()
+        assertNull(retStock)
     }
 
     @Test
@@ -81,7 +99,7 @@ class UtilsFlowsTests {
         // WORK HERE
         val cashUnits: Int = 10
         selfIssueCash(aNode, cashUnits)
-        val flow = UtilsFlows.SplitAndGetCashFlow(10)
+        val flow = UtilsFlows.GetCashFlow(10)
         val future = aNode.startFlow(flow) // no need to run the network for this one. Notary takes no place here.
         val existingCashState = future.get()
         assertNotNull(existingCashState)
@@ -92,15 +110,15 @@ class UtilsFlowsTests {
         // Split that and get a cash(3). Check that in vault exists a cash(3) and a cash(7)
         val cashUnits: Int = 10
         selfIssueCash(aNode, cashUnits)
-        val flow = UtilsFlows.SplitAndGetCashFlow(3)
+        val flow = UtilsFlows.GetCashFlow(3)
         val future = aNode.startFlow(flow)
         network.runNetwork()
         val returnedCashState = future.get()
         // Check returned cash state.
-        assertEquals(3.toBigDecimal(), returnedCashState?.amount?.toDecimal()?.setScale(0))
+        assertEquals(3.toBigDecimal(), returnedCashState?.state?.data?.amount?.toDecimal()?.setScale(0))
         // Check correct outcome of splitting.
-        assertEquals(3.toBigDecimal(), aNode.services.vaultService.queryBy(Cash.State::class.java).states[0].state.data.amount.toDecimal()?.setScale(0))
-        assertEquals(7.toBigDecimal(), aNode.services.vaultService.queryBy(Cash.State::class.java).states[1].state.data.amount.toDecimal()?.setScale(0))
+        assertEquals(3.toBigDecimal(), aNode.services.vaultService.queryBy(Cash.State::class.java).states[0].state.data.amount.toDecimal().setScale(0))
+        assertEquals(7.toBigDecimal(), aNode.services.vaultService.queryBy(Cash.State::class.java).states[1].state.data.amount.toDecimal().setScale(0))
     }
 
     @Test
@@ -109,11 +127,11 @@ class UtilsFlowsTests {
         selfIssueCash(aNode, 1)
         selfIssueCash(aNode, 2)
         selfIssueCash(aNode, 3)
-        val flow = UtilsFlows.SplitAndGetCashFlow(6)
+        val flow = UtilsFlows.GetCashFlow(6)
         val future = aNode.startFlow(flow)
         network.runNetwork()
         val returnedCashState = future.get()
-        assertEquals(6.toBigDecimal(), returnedCashState?.amount?.toDecimal()?.setScale(0))
+        assertEquals(6.toBigDecimal(), returnedCashState?.state?.data?.amount?.toDecimal()?.setScale(0))
     }
 
     @Test
@@ -122,7 +140,7 @@ class UtilsFlowsTests {
         selfIssueCash(aNode, 1)
         selfIssueCash(aNode, 2)
         selfIssueCash(aNode, 3)
-        val flow = UtilsFlows.SplitAndGetCashFlow(7)
+        val flow = UtilsFlows.GetCashFlow(7)
         val future = aNode.startFlow(flow)
         network.runNetwork()
         val returnedCashState = future.get()

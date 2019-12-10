@@ -15,6 +15,7 @@ import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.contextLogger
 import net.corda.finance.contracts.asset.Cash
 import net.corda.finance.flows.AbstractCashFlow
+import java.lang.IllegalArgumentException
 
 // TODO: make the below flows generic to support both Cash and Stock
 object UtilsFlows {
@@ -58,17 +59,17 @@ object UtilsFlows {
     }
 
     // 1. Split Cash : 1 cash state -> 2 cash states -> return the cash state we requested
-    class SplitAndGetCashFlow(private val units: Int, progressTracker: ProgressTracker): AbstractCashFlow<Cash.State?>(progressTracker) {
+    class GetCashFlow(private val units: Int, progressTracker: ProgressTracker): AbstractCashFlow<StateAndRef<Cash.State>?>(progressTracker) {
         constructor(units: Int) : this(units, tracker())
 
         @Suspendable
-        override fun call(): Cash.State? {
+        override fun call(): StateAndRef<Cash.State>? {
             // Get all Cash states and iterate through them to find one big enough to split.
             val cashStates = serviceHub.vaultService.queryBy(Cash.State::class.java).states
-            var cashStateToReturn: Cash.State? = null
+            var cashStateToReturn: StateAndRef<Cash.State>? = null
             for (cashState in cashStates) {
                 if (cashState.state.data.amount.toDecimal().setScale(0) == units.toBigDecimal()) { // no need to split it, just return this one.
-                    cashStateToReturn = cashState.state.data
+                    cashStateToReturn = cashState
                 } else if (cashState.state.data.amount.toDecimal().setScale(0) > units.toBigDecimal()) { // do splitting.
                     cashStateToReturn = splitAndGetCash(cashState, units)
                 } else {
@@ -85,7 +86,7 @@ object UtilsFlows {
 
         // Split and return the Cash.State we want to use.
         @Suspendable
-        private fun splitAndGetCash(cashState: StateAndRef<Cash.State>, units: Int): Cash.State {
+        private fun splitAndGetCash(cashState: StateAndRef<Cash.State>, units: Int): StateAndRef<Cash.State> {
             val me = ourIdentity
             val token = cashState.state.data.amount.token
             val initialAmount = cashState.state.data.amount
@@ -102,7 +103,7 @@ object UtilsFlows {
 
             val stx = serviceHub.signInitialTransaction(txBuilder)
             val ftx = finaliseTx(stx, emptySet(), "Unable to notarise issue")
-            return ftx.tx.outputsOfType(Cash.State::class.java).apply { assert(size == 2) }[0] // careful to always put unitsCashState first in txBuilder.
+            return ftx.tx.outRef(0) // careful to always put unitsCashState first in txBuilder.
         }
     }
 
@@ -146,5 +147,47 @@ object UtilsFlows {
             subFlow(FinalityFlow(stx, emptySet<FlowSession>())).tx.outputsOfType(Stock::class.java).single()
             return true
         }
+    }
+
+    class GetStockFlow(private val stockId: UniqueIdentifier, private val units: Int): FlowLogic<StateAndRef<Stock>?>() {
+
+        @Suspendable
+        override fun call(): StateAndRef<Stock>? {
+            // Go simple this time: call MergeStockFlow at the beginning.
+            subFlow(MergeStockFlow(stockId))
+            val stockToReturn: StateAndRef<Stock>?
+            val stockState = serviceHub.vaultService.queryBy(Stock::class.java).states
+                .filter { it.state.data.uniqueId == stockId && !it.state.data.listed }
+                .single()
+            if (units.toBigDecimal() > stockState.state.data.amount.toDecimal().setScale(0)) stockToReturn = null
+            else if (units.toBigDecimal() == stockState.state.data.amount.toDecimal().setScale(0)) stockToReturn = stockState
+            else {
+                stockToReturn = splitAndGetStock(stockState, units)
+            }
+            return stockToReturn
+        }
+
+        // Split and return the StateAndRef<Stock> we want to use.
+        @Suspendable
+        private fun splitAndGetStock(stockState: StateAndRef<Stock>, units: Int): StateAndRef<Stock> {
+            val me = ourIdentity
+            val inStock = stockState.state.data
+            val token = inStock.amount.token
+            val initialAmount = inStock.amount
+            val unitsAmount = Amount.fromDecimal(units.toBigDecimal(), token)
+            val unitsStockState = inStock.copy(amount = unitsAmount, owner = me)
+            val complementaryCashState = inStock.copy(amount = initialAmount - unitsAmount, owner = me)
+
+            val txBuilder = TransactionBuilder(notary = serviceHub.networkMapCache.notaryIdentities.first())
+            txBuilder.addInputState(stockState)
+                .addOutputState(unitsStockState)
+                .addOutputState(complementaryCashState)
+                .addCommand(Cash.Commands.Move(), me.owningKey)
+                .verify(serviceHub)
+
+            val stx = serviceHub.signInitialTransaction(txBuilder)
+            return subFlow(FinalityFlow(stx, emptySet<FlowSession>())).tx.outRef(0) // careful to always put unitsCashState first in txBuilder.
+        }
+
     }
 }
