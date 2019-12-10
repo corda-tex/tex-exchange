@@ -36,14 +36,7 @@ class StockContract : Contract {
         class List : TypeOnlyCommandData(), Commands {
             override fun verifyCommand(tx: LedgerTransaction, signers: Set<PublicKey>) {
                 requireThat {
-                    "There must be only one Stock input" using (tx.inputsOfType(Stock::class.java).size == 1)
-                    "There must be only one Stock output" using (tx.outputsOfType(Stock::class.java).size == 1)
-                    val stockStateOut = tx.outputsOfType(Stock::class.java).single()
-                    val stockStateIn = tx.inputsOfType(Stock::class.java).single()
-                    "The 'listed' stock must be false in the input state" using (!stockStateIn.listed)
-                    "The 'listed' stock must be true in the output state" using (stockStateOut.listed)
-                    "Only the 'listed' stock can change" using (stockStateOut.copy(listed = false) == stockStateIn)
-                    "Only the owner needs to sign the transaction" using (signers == setOf(stockStateIn.owner.owningKey))
+                    "There must be only one Order output" using (tx.outputsOfType(Order::class.java).size == 1)
                 }
             }
         }
@@ -57,11 +50,10 @@ class StockContract : Contract {
                     val outputStock = tx.outputsOfType(Stock::class.java).single()
                     "Only the 'owner' and 'listed' properties can change" using (inputStock == outputStock.copy(
                         owner = inputStock.owner,
-                        listed = inputStock.listed
+                        orderId = inputStock.orderId
                     ))
                     "The 'owner' property must change" using (outputStock.owner != inputStock.owner)
-                    "The 'listed' property must change" using (outputStock.listed != inputStock.listed)
-                    "The 'listed' property must be 'false'" using (!outputStock.listed)
+                    "The 'listed' property must change" using (outputStock.orderId != inputStock.orderId)
 //                    "The previous and new owner only must sign a transfer transaction" using (signers == setOf(
 //                        outputStock.owner.owningKey,
 //                        inputStock.owner.owningKey
@@ -77,9 +69,8 @@ class StockContract : Contract {
                 val inputItem = tx.inputsOfType(Stock::class.java).single()
                 val outputItem = tx.outputsOfType(Stock::class.java).single()
                 val inputOrder = tx.inputsOfType(Order::class.java).single()
-                "Only the 'listed' property can change" using (inputItem == outputItem.copy(listed = inputItem.listed))
-                "The 'listed' property must change" using (outputItem.listed != inputItem.listed)
-                "The 'listed' property must be 'false'" using (!outputItem.listed)
+                "Only the 'listed' property can change" using (inputItem == outputItem.copy(orderId = inputItem.orderId))
+                "The 'listed' property must change" using (outputItem.orderId != inputItem.orderId)
                 if (inputOrder.buyer != null) {
                     "Only the current owner and buyer must sign a de-list transaction" using (signers == setOf(
                         inputItem.owner.owningKey,
@@ -96,13 +87,28 @@ class StockContract : Contract {
                 "There must only be one output state" using (tx.outputStates.size == 1)
                 val outState = tx.outputStates[0] as Stock
                 val outAmount = outState.amount
-                val token  = outAmount.token
+                val token = outAmount.token
                 var sumInAmount = Amount.zero(token)
-                tx.inputStates.forEach{ sumInAmount += (it as Stock).amount }
+                tx.inputStates.forEach { sumInAmount += (it as Stock).amount }
                 "Stock amounts before and after must be equal" using (sumInAmount == outAmount)
+            }
+        }
+
+        class Split : Commands {
+            override fun verifyCommand(tx: LedgerTransaction, signers: Set<PublicKey>) {
+                "There must only be one input state" using (tx.inputStates.size == 1)
+                "There must only be two output states" using (tx.outputStates.size == 2)
+            }
+        }
+
+        class Reserve: Commands {
+            override fun verifyCommand(tx: LedgerTransaction, signers: Set<PublicKey>) {
+                "There must be only one Stock input" using (tx.inputsOfType(Stock::class.java).size == 1)
+                "There must be only one Stock output" using (tx.outputsOfType(Stock::class.java).size == 1)
             }
 
         }
+
     }
 
     /**

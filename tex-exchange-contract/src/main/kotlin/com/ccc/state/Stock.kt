@@ -3,18 +3,13 @@ package com.ccc.state
 import com.ccc.contract.StockContract
 import net.corda.core.contracts.*
 import net.corda.core.identity.AbstractParty
-import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
-import net.corda.finance.contracts.asset.Cash
-import java.lang.IllegalArgumentException
-import java.lang.IllegalStateException
 import java.security.PublicKey
-import java.util.*
 
 /**
  * @param description Textual description of the  item.
  * @param owner The Party who owns the  item.
- * @param listed Whether or not the  item is listed in an active sale.
+ * @param orderId Whether or not the  item is listed in an active sale.
  * @param linearId Unique identifier of a StockState object.
  */
 @BelongsToContract(StockContract::class)
@@ -23,7 +18,7 @@ data class Stock(
     val description: String,
     override val owner: AbstractParty,
     override val amount: Amount<Issued<StockUnit>>,
-    val listed: Boolean = false
+    val orderId: UniqueIdentifier? = null // if a Stock gets listed it gets the Order's id.
 ) : FungibleAsset<StockUnit> {
 
     override val participants: List<AbstractParty> get() = listOf(owner)
@@ -33,16 +28,18 @@ data class Stock(
         /**
      * Returns a copy of this Stock which is listed.
      */
-    fun list(): Stock {
-        return copy(listed = true)
+    fun list(orderId: UniqueIdentifier): Stock {
+        return copy(orderId = orderId)
     }
 
     /**
      * Returns a copy of this Stock which is not listed.
      */
     fun delist(): Stock {
-        return copy(listed = false)
+        return copy(orderId = null)
     }
+
+    fun isListed() = orderId != null
 
     // Not to be used...
     override val exitKeys: Collection<PublicKey>

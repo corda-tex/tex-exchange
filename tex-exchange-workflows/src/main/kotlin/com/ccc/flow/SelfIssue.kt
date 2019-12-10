@@ -39,8 +39,7 @@ object SelfIssue {
                 stockId ?: UniqueIdentifier(), // existing or new stock.
                 description,
                 ourIdentity,
-                zeroAmount.copy(quantity = quantity),
-                listed = false
+                zeroAmount.copy(quantity = quantity)
             )
 
             val command = Command(StockContract.Commands.Issue(), listOf(ourIdentity.owningKey))

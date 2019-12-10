@@ -116,7 +116,7 @@ object UtilsFlows {
         override fun call(): Boolean {
             val me = ourIdentity
             val stockStates = serviceHub.vaultService.queryBy(Stock::class.java).states
-                .filter { it.state.data.stockId == stockId && !it.state.data.listed }
+                .filter { it.state.data.stockId == stockId && !it.state.data.isListed() }
             if (stockStates.isEmpty()) {
                 log.info("There are no stock states in my vault to merge. Returning...")
                 return false
@@ -156,7 +156,7 @@ object UtilsFlows {
             subFlow(MergeStockFlow(stockId))
             val stockToReturn: StateAndRef<Stock>?
             val stockStates = serviceHub.vaultService.queryBy(Stock::class.java).states
-                .filter { it.state.data.stockId == stockId && !it.state.data.listed }
+                .filter { it.state.data.stockId == stockId && !it.state.data.isListed() }
             if (stockStates.isEmpty() || stockStates.size > 1) {
                 return null
             }
@@ -178,13 +178,13 @@ object UtilsFlows {
             val initialAmount = inStock.amount
             val unitsAmount = Amount.fromDecimal(quantity.toBigDecimal(), token)
             val unitsStockState = inStock.copy(amount = unitsAmount, owner = me)
-            val complementaryCashState = inStock.copy(amount = initialAmount - unitsAmount, owner = me)
+            val complementaryStockState = inStock.copy(amount = initialAmount - unitsAmount, owner = me)
 
             val txBuilder = TransactionBuilder(notary = serviceHub.networkMapCache.notaryIdentities.first())
             txBuilder.addInputState(stockState)
                 .addOutputState(unitsStockState)
-                .addOutputState(complementaryCashState)
-                .addCommand(Cash.Commands.Move(), me.owningKey)
+                .addOutputState(complementaryStockState)
+                .addCommand(StockContract.Commands.Split(), me.owningKey)
                 .verify(serviceHub)
 
             val stx = serviceHub.signInitialTransaction(txBuilder)

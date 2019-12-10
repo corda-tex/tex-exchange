@@ -1,7 +1,7 @@
 package com.ccc.flow
 
-import com.ccc.flow.TestUtils.selfIssueCash
-import com.ccc.flow.TestUtils.selfIssueStock
+import com.ccc.flow.TestUtils.issueCashToNode
+import com.ccc.flow.TestUtils.issueStockToNode
 import com.ccc.state.Stock
 import net.corda.core.identity.CordaX500Name
 import net.corda.finance.contracts.asset.Cash
@@ -43,8 +43,8 @@ class UtilsFlowsTests {
 
     @Test
     fun `MergeStockFlow merges` () {
-        val stockId = selfIssueStock(aNode, null, "potatoes", 10)
-        selfIssueStock(aNode, stockId, "potatoes", 10)
+        val stockId = issueStockToNode(aNode, null, "potatoes", 10)
+        issueStockToNode(aNode, stockId, "potatoes", 10)
 
         var stockStates = aNode.services.vaultService.queryBy(Stock::class.java).states
         assertEquals(2, stockStates.size)
@@ -60,8 +60,8 @@ class UtilsFlowsTests {
     @Test
     fun `MergeCashFlow merges` () {
         val cashUnits: Int = 10
-        selfIssueCash(aNode, cashUnits)
-        selfIssueCash(aNode, cashUnits)
+        issueCashToNode(aNode, cashUnits)
+        issueCashToNode(aNode, cashUnits)
         // Lets merge Cash now.
         val flow = UtilsFlows.MergeCashFlow()
         val future = aNode.startFlow(flow)
@@ -73,8 +73,8 @@ class UtilsFlowsTests {
 
     @Test
     fun `GetStockFlow gets stock - We have sufficient stock` () {
-        val stockId = selfIssueStock(aNode, null, "potatoes", 5)
-        selfIssueStock(aNode, stockId, "potatoes", 6)
+        val stockId = issueStockToNode(aNode, null, "potatoes", 5)
+        issueStockToNode(aNode, stockId, "potatoes", 6)
         val flow = UtilsFlows.GetStockFlow(stockId, 11)
         val future = aNode.startFlow(flow)
         network.runNetwork()
@@ -84,9 +84,9 @@ class UtilsFlowsTests {
 
     @Test
     fun `GetStockFlow gets stock - We don't have sufficient stock` () {
-        val stockId = selfIssueStock(aNode, null, "potatoes", 1)
-        selfIssueStock(aNode, stockId, "potatoes", 2)
-        selfIssueStock(aNode, stockId, "potatoes", 3)
+        val stockId = issueStockToNode(aNode, null, "potatoes", 1)
+        issueStockToNode(aNode, stockId, "potatoes", 2)
+        issueStockToNode(aNode, stockId, "potatoes", 3)
         val flow = UtilsFlows.GetStockFlow(stockId, 7)
         val future = aNode.startFlow(flow)
         network.runNetwork()
@@ -98,7 +98,7 @@ class UtilsFlowsTests {
     fun `SplitCashFlow finds the amount in a state` () {
         // WORK HERE
         val cashUnits: Int = 10
-        selfIssueCash(aNode, cashUnits)
+        issueCashToNode(aNode, cashUnits)
         val flow = UtilsFlows.GetCashFlow(10)
         val future = aNode.startFlow(flow) // no need to run the network for this one. Notary takes no place here.
         val existingCashState = future.get()
@@ -109,7 +109,7 @@ class UtilsFlowsTests {
     fun `SplitCashFlow does splitting and returns the requested cash`() {
         // Split that and get a cash(3). Check that in vault exists a cash(3) and a cash(7)
         val cashUnits: Int = 10
-        selfIssueCash(aNode, cashUnits)
+        issueCashToNode(aNode, cashUnits)
         val flow = UtilsFlows.GetCashFlow(3)
         val future = aNode.startFlow(flow)
         network.runNetwork()
@@ -124,9 +124,9 @@ class UtilsFlowsTests {
     @Test
     fun `SplitCashFlow does merging and returns the requested cash - Requested cash exists in vault`() {
         // Add cash: 1, 2 ,3 ask for 6. It should merge 1+2+3 = 6 and return that.
-        selfIssueCash(aNode, 1)
-        selfIssueCash(aNode, 2)
-        selfIssueCash(aNode, 3)
+        issueCashToNode(aNode, 1)
+        issueCashToNode(aNode, 2)
+        issueCashToNode(aNode, 3)
         val flow = UtilsFlows.GetCashFlow(6)
         val future = aNode.startFlow(flow)
         network.runNetwork()
@@ -137,9 +137,9 @@ class UtilsFlowsTests {
     @Test
     fun `SplitCashFlow does merging and returns the requested cash - Requested cash does not exist in vault`() {
         // Add cash: 1, 2 ,3 ask for more (e.g. 7). We don't have that much in vault. Return nothing.
-        selfIssueCash(aNode, 1)
-        selfIssueCash(aNode, 2)
-        selfIssueCash(aNode, 3)
+        issueCashToNode(aNode, 1)
+        issueCashToNode(aNode, 2)
+        issueCashToNode(aNode, 3)
         val flow = UtilsFlows.GetCashFlow(7)
         val future = aNode.startFlow(flow)
         network.runNetwork()

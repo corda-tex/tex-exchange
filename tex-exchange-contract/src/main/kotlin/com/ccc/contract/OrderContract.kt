@@ -1,7 +1,6 @@
 package com.ccc.contract
 
 import com.ccc.state.Order
-import com.ccc.state.Stock
 import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
 import java.security.PublicKey
@@ -30,20 +29,13 @@ class OrderContract : Contract {
             override fun verifyCommand(tx: LedgerTransaction, signers: Set<PublicKey>) {
                 val timeWindow: TimeWindow? = tx.timeWindow
                 requireThat {
-                    "Only one input should be consumed when opening/listing a Sell order" using (1 == tx.inputStates.size)
-                    "The input state type should be Stock" using (tx.inputStates.single() is Stock)
-                    "Only two output states should be created when opening a Sell Order" using (2 == tx.outputStates.size)
-                    val orderState = tx.outputsOfType(Order::class.java).single()
-                    val stockState = tx.inputsOfType(Stock::class.java).single()
-                    "A newly issued Sell Order must have a starting price greater than zero" using (orderState.price.quantity > 0)
-                    val time = timeWindow?.fromTime
-                        ?: throw IllegalArgumentException("Sell Order openings or listings must be timestamped")
-                    "The expiry date cannot be in the past" using (time < orderState.expiryDateTime)
-                    "Only the seller needs to sign the transaction" using (signers == setOf(orderState.seller.owningKey))
-                    "The Sell Order must have no buyer when listed" using (orderState.buyer == null)
-                    "Only the owner of the Stock can list it in a Sell Order" using (stockState.owner == orderState.seller)
-                    val stockCommand = tx.commandsOfType(StockContract.Commands::class.java).single()
-                    "Stock must be listed" using (stockCommand.value is StockContract.Commands.List)
+                    "Only two output states should be created when opening a Sell Order" using (1 == tx.outputStates.size)
+                    val sellOrder = tx.outputsOfType(Order::class.java).single()
+                    "A newly issued Sell Order must have a starting price greater than zero" using (sellOrder.price.quantity > 0)
+                    val time = timeWindow?.fromTime ?: throw IllegalArgumentException("Sell Order openings or listings must be timestamped")
+                    "The expiry date cannot be in the past" using (time < sellOrder.expiryDateTime)
+                    "Only the seller needs to sign the transaction" using (signers == setOf(sellOrder.seller.owningKey))
+                    "The Sell Order must have no buyer when listed" using (sellOrder.buyer == null)
                 }
             }
         }

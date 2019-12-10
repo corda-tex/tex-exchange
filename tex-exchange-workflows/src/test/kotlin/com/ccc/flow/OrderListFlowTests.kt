@@ -1,5 +1,6 @@
 package com.ccc.flow
 
+import com.ccc.flow.TestUtils.issueStockToNode
 import com.ccc.state.Order
 import com.ccc.state.Stock
 import net.corda.core.contracts.Amount
@@ -19,11 +20,13 @@ import org.junit.Test
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class OrderListFlowTests {
     companion object {
         val ONE_POUND = Amount.fromDecimal(BigDecimal(1), GBP)
+        val TWO_POUNDS = Amount.fromDecimal(BigDecimal(2), GBP)
         val ONE_DAY = Instant.now().plus(Duration.ofDays(1))
     }
 
@@ -90,6 +93,32 @@ class OrderListFlowTests {
         val orderInBuyer2 = buyerNode2.services.vaultService.queryBy(Order::class.java)
         assert(order.states.isNotEmpty())
         assert(orderInBuyer2.states.isNotEmpty())
+    }
+
+    @Test
+    fun `OrderListFlow a peer gets multiple orders of the same stock`() {
+        val sellerNode1 = network.createNode(CordaX500Name("sellerNode1", "", "GB"))
+        val sellerNode2 = network.createNode(CordaX500Name("sellerNode2", "", "GB"))
+        val peer = network.createNode(CordaX500Name("peer", "", "GB"))
+
+        // Issue Stock to Nodes.
+        val stockId = issueStockToNode(sellerNode1, null, "potatoes", 10)
+        issueStockToNode(sellerNode2, stockId, "potatoes", 10)
+
+        val orderFlow1 = OrderListFlow(stockId, ONE_POUND, 5, ONE_DAY)
+        val orderFlow2 = OrderListFlow(stockId, TWO_POUNDS, 5, ONE_DAY)
+        val future1 = sellerNode1.startFlow(orderFlow1)
+        val future2 = sellerNode2.startFlow(orderFlow2)
+        network.runNetwork()
+        future1.get()
+        future2.get()
+
+        val peerStockRepository = peer.services.vaultService.queryBy(Stock::class.java).states
+        assertEquals(0, peerStockRepository.size)
+
+        val peerOrderBook = peer.services.vaultService.queryBy(Order::class.java).states
+        assertEquals(2, peerOrderBook.size)
+
     }
 
 }
