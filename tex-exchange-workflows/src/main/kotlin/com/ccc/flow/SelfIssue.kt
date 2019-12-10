@@ -53,6 +53,7 @@ object SelfIssue {
     }
 
     // Money "agnostic" used: MONEY_UNITS
+    @StartableByRPC
     class SelfIssueCashFlow(val units: Int) : FlowLogic<Unit>() {
         @Suspendable
         override fun call() {
