@@ -35,7 +35,7 @@ class OrderListFlow(
     private val expiry: Instant
 ) : FlowLogic<SignedTransaction>() {
 
-    override val progressTracker = ProgressTracker()
+    //override val progressTracker = ProgressTracker()
 
     @Suspendable
     override fun call(): SignedTransaction {
