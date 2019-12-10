@@ -38,11 +38,11 @@ object SelfIssue {
             val token = Issued(me, StockUnit)
             val zeroAmount = Amount.zero(token)
             val stock = Stock(
+                stockId ?: UniqueIdentifier(), // existing or new stock.
                 description,
                 ourIdentity,
                 zeroAmount.copy(quantity = quantity),
-                listed = false,
-                uniqueId = stockId ?: UniqueIdentifier() // existing or new stock.
+                listed = false
             )
 
             val command = Command(StockContract.Commands.Issue(), listOf(ourIdentity.owningKey))

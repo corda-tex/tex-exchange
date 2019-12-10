@@ -18,11 +18,13 @@ import java.util.*
  * @param linearId Unique identifier of a StockState object.
  */
 @BelongsToContract(StockContract::class)
-data class Stock(val description: String,
-                 override val owner: AbstractParty,
-                 override val amount: Amount<Issued<StockUnit>>,
-                 val listed: Boolean = false,
-                 val uniqueId: UniqueIdentifier) : FungibleAsset<StockUnit> {
+data class Stock(
+    val uniqueId: UniqueIdentifier,
+    val description: String,
+    override val owner: AbstractParty,
+    override val amount: Amount<Issued<StockUnit>>,
+    val listed: Boolean = false
+) : FungibleAsset<StockUnit> {
 
     override val participants: List<AbstractParty> get() = listOf(owner)
 
