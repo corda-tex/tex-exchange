@@ -1,102 +1,78 @@
-//package com.ccc.flow
-//
-//import co.paralleluniverse.fibers.Suspendable
-//import com.ccc.contract.OrderContract
-//import com.ccc.contract.StockContract
-//import com.ccc.state.Direction
-//import com.ccc.state.Order
-//import com.ccc.state.Stock
-//import net.corda.core.contracts.*
-//import net.corda.core.flows.*
-//import net.corda.core.node.StatesToRecord
-//import net.corda.core.transactions.SignedTransaction
-//import net.corda.core.transactions.TransactionBuilder
-//import net.corda.core.utilities.ProgressTracker
-//import java.lang.IllegalStateException
-//import java.time.Instant
-//import java.util.*
-//
-///**
-// * Prerequisite: SelfIssueStockFlow and get a UniqueIdentifier of the Stock
-// *
-// * This flow would create a Sell Order for a Stock and broadcast the data to all the nodes in the network.
-// * The flow would return the order ID. Use this id in other flows.
-// */
-//
-//@InitiatingFlow
-//@StartableByRPC
-//class OrderListFlow(
-//    val stockID: UniqueIdentifier,
-//    val stockPrice: Amount<Currency>,
-//    val stockUnits: Int,
-//    val expiry: Instant
-//) : FlowLogic<SignedTransaction>() {
-//
-//    override val progressTracker = ProgressTracker()
-//
-//    @Suspendable
-//    override fun call(): SignedTransaction {
-//        val stock = serviceHub.vaultService.queryBy(Stock::class.java) // Find the Stock from the vault
-//        val stockStateAndRef = stock.states.find { it.state.data.linearId == stockID } ?: throw StockNotFoundException(stockID)
-//        //Create a Sell Order
-//        val inputOrder = Order( stockLinearId = stockID,
-//                                stockDescription = stockStateAndRef.state.data.description,
-//                                price = stockPrice,
-//                                stockUnits = stockUnits,
-//                                direction = Direction.SELL,
-//                                expiryDateTime = expiry,
-//                                seller = ourIdentity,
-//                                buyer = null)
-//        //Create a Stock state with listed set to be true
-//        val outputStock = stockStateAndRef.state.data.list()
-//        //Create a Command to list the stock
-//        val commandStockList = Command(StockContract.Commands.List(), ourIdentity.owningKey)
-//        //Create a Command to list the Sell order
-//        val commandOrderList = Command(OrderContract.Commands.List(), ourIdentity.owningKey)
-//        //Create a Transaction Builder with the following items
-//        // Stock stateAndRef (old)
-//        // Stock List command
-//        // StateAndContract for Stock - Tell the contract ID and the outputState
-//        // the new Output Stock State
-//        // and
-//        // Stock Contract ID
-//        // Sell Order Command with the first time Sell Order state
-//        // StateAndContract for Sell Order - Tell the contract ID and the outputState
-//        // the first Order State
-//        // and
-//        // Order Contract ID
-//        // Set a Time window between now and the expiry date of the sell order
-//        val notary = serviceHub.networkMapCache.notaryIdentities.first()
-//        val txBuilder = TransactionBuilder(notary)
-//            .withItems(
-//                stockStateAndRef,
-//                commandStockList,
-//                StateAndContract(outputStock, StockContract.STOCK_CONTRACT_REF),
-//                commandOrderList,
-//                StateAndContract(inputOrder, OrderContract.ORDER_CONTRACT_REF),
-//                TimeWindow.between(serviceHub.clock.instant(), inputOrder.expiryDateTime)
-//            )
-//        //Verify the builder with the serviceHub before signing the Tx (This will run the contracts)
-//        txBuilder.verify(serviceHub)
-//        //Create a Signed Tx
-//        val signedInitialTx = serviceHub.signInitialTransaction(txBuilder)
-//        //Create a FinalityFlow and also BroadcastTx to all the parties
-//        val counterPartiesSessions = serviceHub.networkMapCache.allNodes
-//            .asSequence()
-//            .filter { it.legalIdentities.first() != inputOrder.seller && it.legalIdentities.first() != notary }
-//            .map { it.legalIdentities.first() }.map { initiateFlow(it) }.toSet()
-//        return subFlow(FinalityFlow(signedInitialTx, counterPartiesSessions))
-//        //TODO: Take the output state of the Sell Order and figure out the UUID of the sell order
-//    }
-//}
-//
-//@InitiatedBy(OrderListFlow::class)
-//class OrderListFlowResponder(val otherSideSession: FlowSession) : FlowLogic<Unit>() {
-//    @Suspendable
-//    override fun call() {
-//        subFlow(ReceiveFinalityFlow(otherSideSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
-//    }
-//
-//}
-//
-//class StockNotFoundException(stockID: UniqueIdentifier) : IllegalStateException("Stock with '$stockID' does not exist")
+package com.ccc.flow
+
+import co.paralleluniverse.fibers.Suspendable
+import com.ccc.contract.OrderContract
+import com.ccc.contract.StockContract
+import com.ccc.state.Order
+import net.corda.core.contracts.*
+import net.corda.core.flows.*
+import net.corda.core.node.StatesToRecord
+import net.corda.core.transactions.SignedTransaction
+import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.utilities.ProgressTracker
+import java.lang.IllegalStateException
+import java.time.Instant
+import java.util.*
+
+/**
+ * Prerequisite: SelfIssueStockFlow and get a UniqueIdentifier of the Stock
+ *
+ * This flow would create a Sell Order for a Stock and broadcast the data to all the nodes in the network.
+ * The flow would return the order ID. Use this id in other flows.
+ */
+
+@InitiatingFlow
+@StartableByRPC
+class OrderListFlow(
+    private val stockId: UniqueIdentifier,
+    private val stockPrice: Amount<Currency>,
+    private val stockQuantity: Long,
+    private val expiry: Instant
+) : FlowLogic<SignedTransaction>() {
+
+    override val progressTracker = ProgressTracker()
+
+    @Suspendable
+    override fun call(): SignedTransaction {
+        val stockStateAndRef = subFlow(UtilsFlows.GetStockFlow(stockId, stockQuantity)) ?: throw StockNotFoundException(stockId)
+        // Create a Sell Order.
+        val sellOrder =  Order(stockId = stockId,
+                                stockDescription = stockStateAndRef.state.data.description,
+                                stockQuantity = stockQuantity,
+                                price = stockPrice,
+                                state = Order.State.SELL,
+                                expiryDateTime = expiry,
+                                seller = ourIdentity,
+                                buyer = null)
+        val outputStock = stockStateAndRef.state.data.list() // create a stock state and list it.
+        val notary = serviceHub.networkMapCache.notaryIdentities.first()
+        val txBuilder = TransactionBuilder(notary)
+            .withItems(
+                stockStateAndRef,
+                Command(StockContract.Commands.List(), ourIdentity.owningKey),
+                StateAndContract(outputStock, StockContract.STOCK_CONTRACT_REF),
+                Command(OrderContract.Commands.List(), ourIdentity.owningKey),
+                StateAndContract(sellOrder, OrderContract.ORDER_CONTRACT_REF),
+                TimeWindow.between(serviceHub.clock.instant(), sellOrder.expiryDateTime)
+            )
+        txBuilder.verify(serviceHub)
+        val signedInitialTx = serviceHub.signInitialTransaction(txBuilder)
+        val counterPartiesSessions = serviceHub.networkMapCache.allNodes
+            .asSequence()
+            .filter { it.legalIdentities.first() != sellOrder.seller && it.legalIdentities.first() != notary }
+            .map { it.legalIdentities.first() }.map { initiateFlow(it) }.toSet()
+        return subFlow(FinalityFlow(signedInitialTx, counterPartiesSessions))
+        //TODO: Take the output state of the Sell Order and figure out the UUID of the sell order
+    }
+}
+
+@InitiatedBy(OrderListFlow::class)
+class OrderListFlowResponder(private val otherSideSession: FlowSession) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        subFlow(ReceiveFinalityFlow(otherSideSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
+    }
+
+}
+
+class StockNotFoundException(stockId: UniqueIdentifier) : IllegalStateException("Stock with '$stockId' does not exist")

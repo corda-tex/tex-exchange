@@ -19,7 +19,7 @@ import java.util.*
  */
 @BelongsToContract(StockContract::class)
 data class Stock(
-    val uniqueId: UniqueIdentifier,
+    val stockId: UniqueIdentifier,
     val description: String,
     override val owner: AbstractParty,
     override val amount: Amount<Issued<StockUnit>>,
@@ -28,14 +28,7 @@ data class Stock(
 
     override val participants: List<AbstractParty> get() = listOf(owner)
 
-    fun split(requestedAmount: Amount<Issued<StockUnit>>): Pair<Stock, Stock> {
-        if (requestedAmount.toDecimal().setScale(0) > amount.toDecimal().setScale(0)) throw IllegalArgumentException("The Requested amount is greater than mine")
-        val stock1 = copy(amount = requestedAmount)
-        val stock2 = copy(amount = amount - requestedAmount)
-        return Pair(stock1, stock2)
-    }
-
-    override fun withNewOwner(newOwner: AbstractParty): CommandAndState = CommandAndState(Cash.Commands.Move(), copy(owner = newOwner))
+    override fun withNewOwner(newOwner: AbstractParty): CommandAndState = CommandAndState(StockContract.Commands.Transfer(), copy(owner = newOwner))
 
         /**
      * Returns a copy of this Stock which is listed.

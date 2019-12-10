@@ -1,7 +1,6 @@
 package com.ccc.flow
 
 
-import com.ccc.flow.TestUtils.selfIssueCash
 import com.ccc.state.Stock
 import net.corda.core.identity.CordaX500Name
 import net.corda.finance.contracts.asset.Cash
@@ -34,7 +33,7 @@ class SelfIssueTests {
         val stockId = issueNode.startFlow(flow).get() // Future#get waits for the flow to be completed.
         val stock = issueNode.services.vaultService.queryBy(Stock::class.java).states[0].state.data
         assertEquals(stock.description, "IBM")
-        assertEquals(stock.uniqueId, stockId)
+        assertEquals(stock.stockId, stockId)
     }
 
     @Test

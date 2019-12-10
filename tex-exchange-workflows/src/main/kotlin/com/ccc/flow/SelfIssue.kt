@@ -23,11 +23,9 @@ import java.util.*
 object SelfIssue {
 
     @StartableByRPC
-    class SelfIssueStockFlow(
-        private val stockId: UniqueIdentifier? = null,
-        val description: String,
-        private val quantity: Long
-    ) : FlowLogic<UniqueIdentifier>() {
+    class SelfIssueStockFlow(private val stockId: UniqueIdentifier? = null,
+                             val description: String,
+                             private val quantity: Long) : FlowLogic<UniqueIdentifier>() {
 
         override val progressTracker = ProgressTracker()
 
@@ -51,7 +49,7 @@ object SelfIssue {
             txBuilder.withItems(StateAndContract(stock, STOCK_CONTRACT_REF), command)
             txBuilder.verify(serviceHub)
             val stx = serviceHub.signInitialTransaction(txBuilder)
-            return subFlow(FinalityFlow(stx, emptyList())).tx.outputsOfType(Stock::class.java).single().uniqueId
+            return subFlow(FinalityFlow(stx, emptyList())).tx.outputsOfType(Stock::class.java).single().stockId
         }
     }
 

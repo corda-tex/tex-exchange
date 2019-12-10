@@ -15,7 +15,6 @@ import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.contextLogger
 import net.corda.finance.contracts.asset.Cash
 import net.corda.finance.flows.AbstractCashFlow
-import java.lang.IllegalArgumentException
 
 // TODO: make the below flows generic to support both Cash and Stock
 object UtilsFlows {
@@ -117,7 +116,7 @@ object UtilsFlows {
         override fun call(): Boolean {
             val me = ourIdentity
             val stockStates = serviceHub.vaultService.queryBy(Stock::class.java).states
-                .filter { it.state.data.uniqueId == stockId && !it.state.data.listed }
+                .filter { it.state.data.stockId == stockId && !it.state.data.listed }
             if (stockStates.isEmpty()) {
                 log.info("There are no stock states in my vault to merge. Returning...")
                 return false
@@ -149,32 +148,35 @@ object UtilsFlows {
         }
     }
 
-    class GetStockFlow(private val stockId: UniqueIdentifier, private val units: Int): FlowLogic<StateAndRef<Stock>?>() {
+    class GetStockFlow(private val stockId: UniqueIdentifier, private val quantity: Long): FlowLogic<StateAndRef<Stock>?>() {
 
         @Suspendable
         override fun call(): StateAndRef<Stock>? {
             // Go simple this time: call MergeStockFlow at the beginning.
             subFlow(MergeStockFlow(stockId))
             val stockToReturn: StateAndRef<Stock>?
-            val stockState = serviceHub.vaultService.queryBy(Stock::class.java).states
-                .filter { it.state.data.uniqueId == stockId && !it.state.data.listed }
-                .single()
-            if (units.toBigDecimal() > stockState.state.data.amount.toDecimal().setScale(0)) stockToReturn = null
-            else if (units.toBigDecimal() == stockState.state.data.amount.toDecimal().setScale(0)) stockToReturn = stockState
-            else {
-                stockToReturn = splitAndGetStock(stockState, units)
+            val stockStates = serviceHub.vaultService.queryBy(Stock::class.java).states
+                .filter { it.state.data.stockId == stockId && !it.state.data.listed }
+            if (stockStates.isEmpty() || stockStates.size > 1) {
+                return null
+            }
+            val stockState = stockStates[0]
+            when {
+                quantity.toBigDecimal() > stockState.state.data.amount.toDecimal().setScale(0) -> stockToReturn = null
+                quantity.toBigDecimal() == stockState.state.data.amount.toDecimal().setScale(0) -> stockToReturn = stockState
+                else -> stockToReturn = splitAndGetStock(stockState, quantity)
             }
             return stockToReturn
         }
 
         // Split and return the StateAndRef<Stock> we want to use.
         @Suspendable
-        private fun splitAndGetStock(stockState: StateAndRef<Stock>, units: Int): StateAndRef<Stock> {
+        private fun splitAndGetStock(stockState: StateAndRef<Stock>, quantity: Long): StateAndRef<Stock> {
             val me = ourIdentity
             val inStock = stockState.state.data
             val token = inStock.amount.token
             val initialAmount = inStock.amount
-            val unitsAmount = Amount.fromDecimal(units.toBigDecimal(), token)
+            val unitsAmount = Amount.fromDecimal(quantity.toBigDecimal(), token)
             val unitsStockState = inStock.copy(amount = unitsAmount, owner = me)
             val complementaryCashState = inStock.copy(amount = initialAmount - unitsAmount, owner = me)
 
