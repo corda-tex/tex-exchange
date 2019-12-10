@@ -23,6 +23,7 @@ run vaultQuery contractStateType: com.ccc.state.Order2
 
 PartyB: Buy order with funds
 flow start OrderBuyFlow2 linearId: [Order Id]
+flow start OrderBuyFlow2 linearId: 56c89ec9-0604-4905-b484-df621fddaff2
 
 Query PartyB vault for stock tokens and observe GBP tokens have moved
 run vaultQuery contractStateType: com.r3.corda.lib.tokens.contracts.states.FungibleToken
