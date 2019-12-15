@@ -48,16 +48,7 @@ class StockContract : Contract {
                     "There must be only one Stock output" using (tx.outputsOfType(Stock::class.java).size == 1)
                     val inputStock = tx.inputsOfType(Stock::class.java).single()
                     val outputStock = tx.outputsOfType(Stock::class.java).single()
-                    "Only the 'owner' and 'listed' properties can change" using (inputStock == outputStock.copy(
-                        owner = inputStock.owner,
-                        orderId = inputStock.orderId
-                    ))
                     "The 'owner' property must change" using (outputStock.owner != inputStock.owner)
-                    "The 'listed' property must change" using (outputStock.orderId != inputStock.orderId)
-//                    "The previous and new owner only must sign a transfer transaction" using (signers == setOf(
-//                        outputStock.owner.owningKey,
-//                        inputStock.owner.owningKey
-//                    ))
                 }
             }
         }

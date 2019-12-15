@@ -6,7 +6,6 @@ import com.ccc.state.Order
 import com.google.common.annotations.VisibleForTesting
 import net.corda.core.contracts.*
 import net.corda.core.flows.*
-import net.corda.core.node.StatesToRecord
 import net.corda.core.node.services.VaultService
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
@@ -45,13 +44,13 @@ class OrderBuyFlow(private val stockId: UniqueIdentifier, private val stockQuant
             val txBuilder = TransactionBuilder(notary = notary)
                 .addInputState(sellOrder)
                 .addOutputState(buyOrder)
-                .addCommand(OrderContract.Commands.Buy(), ourIdentity.owningKey)
+                .addCommand(OrderContract.Commands.Buy(), listOf(ourIdentity.owningKey, buyOrder.seller.owningKey))
             txBuilder.verify(serviceHub)
             val stx = serviceHub.signInitialTransaction(txBuilder)
-            val seller = buyOrder.participants - ourIdentity
-            val flowSessions = seller.map { initiateFlow(it) }
-            val stxSeller = subFlow(CollectSignaturesFlow(stx, flowSessions))
-            subFlow(FinalityFlow(stxSeller, flowSessions))
+            val seller = buyOrder.seller
+            val flowSession = initiateFlow(seller)
+            val ftx = subFlow(CollectSignaturesFlow(stx, setOf(flowSession)))
+            subFlow(FinalityFlow(ftx, setOf(flowSession)))
             stockQuantityNeeded -= buyOrder.stockQuantity
             boughtOrders.add(buyOrder)
             i++
@@ -84,7 +83,7 @@ class OrderBuyFlowResponder(val flowSession: FlowSession) : FlowLogic<Unit>() {
                 // TODO: Add additional checks here
             }
         }
-        subFlow(signedTransactionFlow)
-        subFlow(ReceiveFinalityFlow(flowSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
+        val txId = subFlow(signedTransactionFlow).id
+        subFlow(ReceiveFinalityFlow(flowSession, expectedTxId = txId))
     }
 }

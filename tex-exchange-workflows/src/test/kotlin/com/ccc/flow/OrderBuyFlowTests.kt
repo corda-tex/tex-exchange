@@ -1,7 +1,9 @@
 package com.ccc.flow
 
 import com.ccc.state.Order
+import com.ccc.state.Stock
 import net.corda.core.contracts.Amount
+import net.corda.core.flows.NotaryException
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.finance.GBP
@@ -16,19 +18,22 @@ import org.junit.Test
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.ExecutionException
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
-class OrderBuyFlowTests {
+open class OrderBuyFlowTests {
     companion object {
         val ONE_POUND = Amount.fromDecimal(BigDecimal(1), GBP)
         val ONE_DAY = Instant.now().plus(Duration.ofDays(1))
     }
 
-    private lateinit var network: MockNetwork
-    private lateinit var sellerNode: StartedMockNode
-    private lateinit var buyerNode: StartedMockNode
-    private lateinit var seller: Party
-    private lateinit var buyer: Party
+    protected lateinit var network: MockNetwork
+    protected lateinit var sellerNode: StartedMockNode
+    protected lateinit var buyerNode: StartedMockNode
+    protected lateinit var seller: Party
+    protected lateinit var buyer: Party
 
     @Before
     fun setup() {
@@ -89,6 +94,8 @@ class OrderBuyFlowTests {
         val boughtOrders = future3.get()
 
         assertEquals(boughtOrders.size,  2)
+        assertEquals(boughtOrders[0].state,  Order.State.BOUGHT)
+        assertEquals(boughtOrders[1].state,  Order.State.BOUGHT)
     }
 
     @Test
@@ -114,12 +121,23 @@ class OrderBuyFlowTests {
         val boughtOrders = future3.get()
 
         assertEquals(boughtOrders.size,  2)
+
+        // havent settled stock yet -> should not have any
+        assertEquals(0 , buyerNode.services.vaultService.queryBy(Stock::class.java).states.size)
+
+
+
+//        val settleFlow = OrderSettleFlow()
+//        val future4 = sellerNode.startFlow(settleFlow)
+//        network.runNetwork()
+//        val settledStocks = future4.get()
+//        assertEquals(1, settledStocks.size)
     }
 
 
 
     @Test
-    fun `OrderBuyFlow tries to buy an already bought sellOrder`() {
+    fun `OrderBuyFlow trying to buy an already bought sellOrder fails`() {
         val buyerNode2 = network.createNode(CordaX500Name("buyerNode2", "", "GB"))
 
         val stockId = TestUtils.issueStockToNode(sellerNode, null, "potatoes", 10)
@@ -138,8 +156,17 @@ class OrderBuyFlowTests {
         val buyFlow2 = OrderBuyFlow(stockId, 5)
         val future2 = buyerNode2.startFlow(buyFlow2)
         network.runNetwork()
-        val boughtOrders2 = future2.get()
-        assertEquals(boughtOrders2.size,  0)
+        var boughtOrders2: List<Order>? = null
+        val e = assertFailsWith<ExecutionException> {
+            boughtOrders2 = future2.get()
+        }
+
+        assertNull(boughtOrders2)
+
+        assert(e.cause != null
+                && e.cause is NotaryException
+                && e.message!!.contains("One or more input states or referenced states have already been used as input states in other transactions."))
+
     }
 
 }

@@ -23,7 +23,7 @@ data class Stock(
 
     override val participants: List<AbstractParty> get() = listOf(owner)
 
-    override fun withNewOwner(newOwner: AbstractParty): CommandAndState = CommandAndState(StockContract.Commands.Transfer(), copy(owner = newOwner))
+    override fun withNewOwner(newOwner: AbstractParty): CommandAndState = CommandAndState(StockContract.Commands.Transfer(), copy(owner = newOwner, orderId = null))
 
         /**
      * Returns a copy of this Stock which is listed.

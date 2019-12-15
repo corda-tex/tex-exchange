@@ -42,7 +42,10 @@ class OrderListFlowTests {
             MockNetworkParameters(
                 cordappsForAllNodes = listOf(
                     TestCordapp.findCordapp("com.ccc.contract"),
-                    TestCordapp.findCordapp("com.ccc.flow"))))
+                    TestCordapp.findCordapp("com.ccc.flow")
+                )
+            )
+        )
 
         sellerNode = network.createNode(CordaX500Name("sellerNode", "", "GB"))
         buyerNode = network.createNode(CordaX500Name("buyerNode", "", "GB"))
