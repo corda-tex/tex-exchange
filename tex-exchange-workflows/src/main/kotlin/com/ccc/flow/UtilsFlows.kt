@@ -15,6 +15,7 @@ import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.contextLogger
 import net.corda.finance.contracts.asset.Cash
 import net.corda.finance.flows.AbstractCashFlow
+import java.math.BigDecimal
 
 // TODO: make the below flows generic to support both Cash and Stock
 object UtilsFlows {
@@ -131,13 +132,13 @@ object UtilsFlows {
 
             // Populate stockBuckets first
             val token = stockStates[0].state.data.amount.token
-            var stockSum = Amount.zero(token)
+            var stockSum = BigDecimal(0)
             val txBuilder = TransactionBuilder(notary = notary)
             for (stockState in stockStates) {
                 txBuilder.addInputState(stockState)
-                stockSum += stockState.state.data.amount
+                stockSum += stockState.state.data.amount.toDecimal()
             }
-            val stockOut = stockStates[0].state.data.copy(amount = stockSum)
+            val stockOut = stockStates[0].state.data.copy(amount = Amount.fromDecimal(stockSum, token))
             txBuilder
                 .addOutputState(stockOut, STOCK_CONTRACT_REF)
                 .addCommand(StockContract.Commands.Merge(), me.owningKey)

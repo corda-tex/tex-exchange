@@ -5,6 +5,7 @@ import com.ccc.state.Stock
 import net.corda.core.contracts.*
 import net.corda.core.contracts.Requirements.using
 import net.corda.core.transactions.LedgerTransaction
+import java.math.BigDecimal
 import java.security.PublicKey
 
 class StockContract : Contract {
@@ -78,10 +79,9 @@ class StockContract : Contract {
                 "There must only be one output state" using (tx.outputStates.size == 1)
                 val outState = tx.outputStates[0] as Stock
                 val outAmount = outState.amount
-                val token = outAmount.token
-                var sumInAmount = Amount.zero(token)
-                tx.inputStates.forEach { sumInAmount += (it as Stock).amount }
-                "Stock amounts before and after must be equal" using (sumInAmount == outAmount)
+                var sumInAmount = BigDecimal(0)
+                tx.inputStates.forEach { sumInAmount += (it as Stock).amount.toDecimal() }
+                "Stock amounts before and after must be equal" using (sumInAmount == outAmount.toDecimal())
             }
         }
 

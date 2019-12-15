@@ -125,13 +125,6 @@ open class OrderBuyFlowTests {
         // havent settled stock yet -> should not have any
         assertEquals(0 , buyerNode.services.vaultService.queryBy(Stock::class.java).states.size)
 
-
-
-//        val settleFlow = OrderSettleFlow()
-//        val future4 = sellerNode.startFlow(settleFlow)
-//        network.runNetwork()
-//        val settledStocks = future4.get()
-//        assertEquals(1, settledStocks.size)
     }
 
 
